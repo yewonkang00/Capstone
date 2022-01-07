@@ -16,28 +16,56 @@ import signUpDialog
 class Ui_MainDialog(object):
     def setupUi(self, MainDialog):
         MainDialog.setObjectName("MainDialog")
-        MainDialog.resize(459, 422)
-        MainDialog.setStyleSheet("background-color: rgb(197, 218, 255);")
+        MainDialog.resize(1920, 1080)
+        MainDialog.setStyleSheet("background-color: rgb(218, 227, 243);")
+
+
         self.pushButton = QtWidgets.QPushButton(MainDialog)
-        self.pushButton.setGeometry(QtCore.QRect(160, 250, 141, 41))
+        self.pushButton.setGeometry(QtCore.QRect(870, 490, 180, 50)) #sign in 위치, 크기
         self.pushButton.setStyleSheet("\n"
-"background-color: rgb(74, 107, 200);")
+"background-color: rgb(68, 114, 196);")
         self.pushButton.setObjectName("pushButton")
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        font.setBold(True)
+        self.pushButton.setStyleSheet("color: white;"
+                               "background-color: rgb(68, 114, 196);"
+                               "border-style: dashed;"
+                               "border-color: #1E90FF")
+        self.pushButton.setFont(font)
+
+
         self.pushButton_3 = QtWidgets.QPushButton(MainDialog)
-        self.pushButton_3.setGeometry(QtCore.QRect(160, 300, 141, 41))
+        self.pushButton_3.setGeometry(QtCore.QRect(870, 560, 180, 50)) #sign up 위치, 크기
         self.pushButton_3.setStyleSheet("\n"
-"background-color: rgb(74, 107, 200);")
+"background-color: rgb(68, 114, 196);")
         self.pushButton_3.setObjectName("pushButton_3")
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        font.setBold(True)
+        self.pushButton_3.setStyleSheet("color: white;"
+                               "background-color: rgb(68, 114, 196);"
+                               "border-style: dashed;"
+                               "border-color: #1E90FF")
+        self.pushButton_3.setFont(font)
+
+
+
+
         self.textEdit = QtWidgets.QTextEdit(MainDialog)
-        self.textEdit.setGeometry(QtCore.QRect(80, 140, 301, 41))
+        self.textEdit.setGeometry(QtCore.QRect(735, 350, 450, 45)) #username or email 위치, 크기
         self.textEdit.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.textEdit.setObjectName("textEdit")
+
+
         self.textEdit_2 = QtWidgets.QTextEdit(MainDialog)
-        self.textEdit_2.setGeometry(QtCore.QRect(80, 190, 301, 31))
+        self.textEdit_2.setGeometry(QtCore.QRect(735, 410, 450, 45)) #password 위치, 크기
         self.textEdit_2.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.textEdit_2.setObjectName("textEdit_2")
+
+
         self.label = QtWidgets.QLabel(MainDialog)
-        self.label.setGeometry(QtCore.QRect(130, 40, 201, 51))
+        self.label.setGeometry(QtCore.QRect(860, 250, 200, 50)) #sign in 텍스트
         self.label.setObjectName("label")
 
         self.retranslateUi(MainDialog)
