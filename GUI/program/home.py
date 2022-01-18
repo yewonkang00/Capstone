@@ -107,6 +107,21 @@ class Ui_MainDialog(object):
 
 
     def button_signup_event(self):
+    #     widget.close()
+    #     print("hello")
+    #
+    #     signUp.show()
+    #     print("hello5")
+    #     signUp.exec()
+    #     print("hello6")
+    #     widget.show()
+    #     print("hellp")
+    # #
+    # def signup_close_event(self):
+    #     print("hello6")
+    #     signUp.close()
+    #     widget.show()
+    #
         widget.setCurrentIndex(widget.currentIndex()+2)
 
     def retranslateUi(self, MainDialog):
@@ -207,13 +222,18 @@ class Ui_SignUp(object):
         self.input_market.setGeometry(QtCore.QRect(300, 280, 151, 31))
         self.input_market.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.input_market.setObjectName("input_market")
+        #
+        # self.input_market.setEditable(True)
+        # self.input_market.lineEdit().setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.input_market.addItem("---market---")
         self.input_market.addItem("UPBIT")
 
         self.retranslateUi(Dialog)
 
         self.button_signup.clicked.connect(self.button_signUp_event)
+        self.button_check.clicked.connect(self.button_checkID_event)
 
+        # QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -237,24 +257,94 @@ class Ui_SignUp(object):
         self.button_signup.setText(_translate("Dialog", "Sign Up"))
         self.button_check.setText(_translate("Dialog", "중복확인"))
 
-    def button_signUp_event(self):
-        name = self.input_name.text()
-        email = self.input_email.text()
+    def button_checkID_event(self):
         id = self.input_id.text()
-        pw = self.input_pw.text()
-        api_key = self.input_api_key.text()
-        secret_key = self.input_api_secret.text()
-        market = self.input_market.currentText()
-        sql = "insert into USER_DB values('{}','{}','{}','{}','{}','{}','{}')".format(name, email, id, pw, market,
-                                                                                      api_key, secret_key)
+        sql = "select user_name from USER_DB where user_id='{}'".format(id)
         Cursor.execute(sql)
         Connect.commit()
+        result = Cursor.fetchall()
+        print("result : ", result)
+        cnt = Cursor.rowcount
+        print("cnt : ", cnt)
+        if(cnt > 0) :
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Message")
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("이미 존재하는 아이디입니다.")
+            msgBox.exec_()
+        else :
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Message")
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("사용 가능한 아이디입니다.")
+            msgBox.exec_()
+
+    def button_signUp_event(self):
+        id = self.input_id.text()
+        sql = "select user_name from USER_DB where user_id='{}'".format(id)
+        Cursor.execute(sql)
+        Connect.commit()
+        result = Cursor.fetchall()
+        cnt = Cursor.rowcount
         msgBox = QMessageBox()
         msgBox.setWindowTitle("Message")
         msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText("회원가입이 완료되었습니다.")
-        msgBox.exec_()
-        widget.setCurrentIndex(widget.currentIndex()-2)
+
+        if(self.input_name.text()==""):
+            msgBox.setText("이름을 입력해주세요.")
+            msgBox.exec_()
+
+        elif (self.input_email.text() == ""):
+            msgBox.setText("이메일을 입력해주세요.")
+            msgBox.exec_()
+
+        elif (self.input_id.text() == ""):
+            msgBox.setText("아이디를 입력해주세요.")
+            msgBox.exec_()
+
+        elif (self.input_pw.text() == ""):
+            msgBox.setText("비밀번호를 입력해주세요.")
+            msgBox.exec_()
+            
+        elif (self.input_api_key.text() == ""):
+            msgBox.setText("API Key를 입력해주세요.")
+            msgBox.exec_()
+
+        elif (self.input_api_secret.text() == ""):
+            msgBox.setText("API Secret Key를 입력해주세요.")
+            msgBox.exec_()
+
+        elif(cnt > 0) :
+            msgBox.setText("아이디 중복확인을 해주세요.")
+            msgBox.exec_()
+
+        elif(self.input_market.currentIndex() == 0):
+            msgBox.setText("이용사를 선택해주세요.")
+            msgBox.exec_()
+
+        else :
+            name = self.input_name.text()
+            email = self.input_email.text()
+            id = self.input_id.text()
+            pw = self.input_pw.text()
+            api_key = self.input_api_key.text()
+            secret_key = self.input_api_secret.text()
+            market = self.input_market.currentText()
+            sql = "insert into USER_DB values('{}','{}','{}','{}','{}','{}','{}')".format(name, email, id, pw, market,
+                                                                                          api_key, secret_key)
+            Cursor.execute(sql)
+            Connect.commit()
+            msgBox.setText("회원가입이 완료되었습니다.")
+            msgBox.exec_()
+            print("bye")
+            # close 함수
+            # home.widget.show()
+            # MainWindow.show()
+            # QtCore.QCoreApplication.instance().quit()
+            # signUp.close()
+            # print(home.widget.currentIndex())
+            widget.setCurrentIndex(widget.currentIndex()-2)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
