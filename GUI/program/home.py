@@ -1,8 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from signUpDialog import Ui_SignUp
 from myPageUi import Ui_MyPage
 import cx_Oracle
-from PyQt5.QtWidgets import QDialog, QApplication, QFileDialog, QMessageBox, QDesktopWidget, QComboBox
+from PyQt5.QtWidgets import QMessageBox, QComboBox
 import sys
 
 Connect = cx_Oracle.connect("hycoin/hycoin1234@hycoin.crmeanf0td5o.ap-northeast-2.rds.amazonaws.com:1521/HYCOIN")
@@ -108,21 +107,6 @@ class Ui_MainDialog(object):
 
 
     def button_signup_event(self):
-    #     widget.close()
-    #     print("hello")
-    #
-    #     signUp.show()
-    #     print("hello5")
-    #     signUp.exec()
-    #     print("hello6")
-    #     widget.show()
-    #     print("hellp")
-    # #
-    # def signup_close_event(self):
-    #     print("hello6")
-    #     signUp.close()
-    #     widget.show()
-    #
         widget.setCurrentIndex(widget.currentIndex()+2)
 
     def retranslateUi(self, MainDialog):
@@ -223,9 +207,6 @@ class Ui_SignUp(object):
         self.input_market.setGeometry(QtCore.QRect(300, 280, 151, 31))
         self.input_market.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.input_market.setObjectName("input_market")
-        #
-        # self.input_market.setEditable(True)
-        # self.input_market.lineEdit().setAlignment(QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.input_market.addItem("---market---")
         self.input_market.addItem("UPBIT")
 
@@ -233,9 +214,6 @@ class Ui_SignUp(object):
 
         self.button_signup.clicked.connect(self.button_signUp_event)
 
-        # self.button_check.clicked.connect(Dialog.checkDoubleName)
-
-        # QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -276,17 +254,7 @@ class Ui_SignUp(object):
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText("회원가입이 완료되었습니다.")
         msgBox.exec_()
-        print("bye")
-        # close 함수
-        # home.widget.show()
-        # MainWindow.show()
-        # QtCore.QCoreApplication.instance().quit()
-        # signUp.close()
-        # print(home.widget.currentIndex())
         widget.setCurrentIndex(widget.currentIndex()-2)
-
-    # def button_checkID_event(self):
-
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
