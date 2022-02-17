@@ -36,7 +36,7 @@ price_arr = []
 url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
 for i in json_data:
     print(i)
-    if(i["currency"] != "KRW") :
+    if i["currency"] != "KRW":
         headers2 = {"Accept": "application/json"}
         # print(url+i["unit_currency"]+"-"+i["currency"])
         response = requests.request("GET", str(url+i["unit_currency"]+"-"+i["currency"]), headers=headers2)
@@ -147,7 +147,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 파이그래표 위치/크기
         self.pie_chart = QtWidgets.QFrame(self.frame_2)
-        self.pie_chart.setGeometry(QtCore.QRect(70, 98, 843, 492))
+        self.pie_chart.setGeometry(QtCore.QRect(177, 98, 843, 492))
         self.pie_chart.setObjectName("pieChart")
         # self.pie_chart.setStyleSheet("background-color:none;")
         self.pie_chart_layout = QHBoxLayout()
@@ -156,7 +156,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 총 평가금액 프레임
         self.frame_3 = QtWidgets.QFrame(self.frame_2)
-        self.frame_3.setGeometry(QtCore.QRect(309, 56, 351, 112))
+        self.frame_3.setGeometry(QtCore.QRect(411, 56, 351, 112))
         self.frame_3.setStyleSheet(
             """
             border: 2px solid #F0F;
@@ -171,7 +171,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 총 평가금액 내용
         self.verticalLayoutWidget = QtWidgets.QWidget(self.frame_3)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(98, 14, 141, 84))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(105, 20, 141, 84))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -184,7 +184,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         sizePolicy.setHeightForWidth(self.label_totalMoneyTitle.sizePolicy().hasHeightForWidth())
         self.label_totalMoneyTitle.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily("LG Smart UI")
+        font.setFamily("Malgun Gothic")
         font.setPointSize(14)
         self.label_totalMoneyTitle.setFont(font)
         self.label_totalMoneyTitle.setStyleSheet("border:none;")
@@ -198,8 +198,9 @@ class Ui_MyPage(QtWidgets.QDialog):
         sizePolicy.setHeightForWidth(self.label_totalMoney.sizePolicy().hasHeightForWidth())
         self.label_totalMoney.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily("LG Smart UI Bold")
-        font.setPointSize(14)
+        font.setFamily("Malgun Gothic")
+        # font.setBold(True)
+        font.setPointSize(18)
         self.label_totalMoney.setFont(font)
         self.label_totalMoney.setStyleSheet("border: none; border-radius: 0%; padding-top: 10;")
         self.label_totalMoney.setAlignment(QtCore.Qt.AlignCenter)
@@ -210,7 +211,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 코인 보유현황 제목
         self.label_currentCoinListTitle = QtWidgets.QLabel(self.frame_2)
-        self.label_currentCoinListTitle.setGeometry(QtCore.QRect(211, 506, 211, 70))
+        self.label_currentCoinListTitle.setGeometry(QtCore.QRect(411, 570, 150, 70))
         font = QtGui.QFont()
         font.setFamily("LG Smart UI")
         font.setPointSize(14)
@@ -225,7 +226,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         # self.tableWidget.setColumnCount(8)
 
         self.table_currentCoinList = QtWidgets.QTableWidget(self.frame_2)
-        self.table_currentCoinList.setGeometry(QtCore.QRect(211, 562, 1645, 460))
+        self.table_currentCoinList.setGeometry(QtCore.QRect(411, 640, 1200, 320))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -277,15 +278,15 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 주문가능금액 프레임
         self.frame_4 = QtWidgets.QFrame(self.frame_2)
-        self.frame_4.setGeometry(QtCore.QRect(886, 281, 914, 211))
+        self.frame_4.setGeometry(QtCore.QRect(1050, 281, 514, 204))
         self.frame_4.setStyleSheet("background-color: #B5C7ED;")
         self.frame_4.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_4.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_4.setObjectName("frame_4")
 
-        # 코인 금액 프레임
+        # 주문가능금액 밑의 메뉴 프레임
         self.verticalLayoutWidget_3 = QtWidgets.QWidget(self.frame_4)
-        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(0, 0, 914, 211))
+        self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(0, 0, 514, 204))
         self.verticalLayoutWidget_3.setObjectName("verticalLayoutWidget_3")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_3)
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -299,8 +300,8 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.label_availableMoneyTitle.setMinimumSize(QtCore.QSize(0, 0))
         self.label_availableMoneyTitle.setBaseSize(QtCore.QSize(0, 0))
         font = QtGui.QFont()
-        font.setFamily("LG Smart UI")
-        font.setPointSize(17)
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(15)
         self.label_availableMoneyTitle.setFont(font)
         self.label_availableMoneyTitle.setStyleSheet("margin-top:10; margin-left:10;")
         self.label_availableMoneyTitle.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
@@ -325,6 +326,11 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.button_charging = QtWidgets.QPushButton(self.verticalLayoutWidget_3)
+
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(13)
+        self.button_charging.setFont(font)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -346,6 +352,10 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.button_sending.setObjectName("button_sending")
         self.horizontalLayout_2.addWidget(self.button_sending)
         self.button_bankingHistory = QtWidgets.QPushButton(self.verticalLayoutWidget_3)
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(13)
+        self.button_sending.setFont(font)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -356,10 +366,14 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.button_bankingHistory.setObjectName("button_bankingHistory")
         self.horizontalLayout_2.addWidget(self.button_bankingHistory)
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(13)
+        self.button_bankingHistory.setFont(font)
 
         # 코인 프레임
         self.frame_5 = QtWidgets.QFrame(self.frame_2)
-        self.frame_5.setGeometry(QtCore.QRect(886, 56, 914, 211))
+        self.frame_5.setGeometry(QtCore.QRect(1050, 56, 514, 204))
         self.frame_5.setStyleSheet("background-color: #B6D1D4;")
         self.frame_5.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_5.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -367,7 +381,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 코인 금액 프레임
         self.verticalLayoutWidget_2 = QtWidgets.QWidget(self.frame_5)
-        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 914, 211))
+        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 514, 204))
         self.verticalLayoutWidget_2.setObjectName("verticalLayoutWidget_2")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -379,8 +393,8 @@ class Ui_MyPage(QtWidgets.QDialog):
         sizePolicy.setHeightForWidth(self.label_currentCoinTitle.sizePolicy().hasHeightForWidth())
         self.label_currentCoinTitle.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setFamily("LG Smart UI")
-        font.setPointSize(17)
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(15)
         self.label_currentCoinTitle.setFont(font)
         self.label_currentCoinTitle.setStyleSheet("margin-left: 10; margin-top: 10;")
         self.label_currentCoinTitle.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
@@ -415,6 +429,10 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.pushButton.setMinimumSize(QtCore.QSize(0, 35))
         self.pushButton.setObjectName("pushButton")
         self.horizontalLayout.addWidget(self.pushButton)
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(13)
+        self.pushButton.setFont(font)
 
         # 거래내역 버튼
         self.pushButton_2 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
@@ -426,6 +444,10 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.pushButton_2.setObjectName("pushButton_2")
         self.horizontalLayout.addWidget(self.pushButton_2)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(13)
+        self.pushButton_2.setFont(font)
 
         # 왼쪽 메뉴 프레임
         self.frame = QtWidgets.QFrame(self.centralwidget)
