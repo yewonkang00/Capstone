@@ -31,14 +31,13 @@ headers = {"Authorization": authorize_token}
 # 코인 목록
 res = requests.get(server_url + "/v1/accounts", headers=headers)
 json_data = res.json()
-total = 0
-price_arr = []
+total = 0  # 총 평가금액
+price_arr = []  # 코인 평가 금액 배열
 url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
 for i in json_data:
     print(i)
     if i["currency"] != "KRW":
         headers2 = {"Accept": "application/json"}
-        # print(url+i["unit_currency"]+"-"+i["currency"])
         response = requests.request("GET", str(url+i["unit_currency"]+"-"+i["currency"]), headers=headers2)
         data = response.json()
         # print(response.text)
@@ -54,25 +53,19 @@ for i in json_data:
     print("total : ", total)
     print(i["currency"])
 
+total_text = str(total) + " 원"  # 총 평가금액
 coin_total = total - int(float(json_data[0]["balance"]))
-coin_total_text = str(coin_total) + " 원"
-# coin_url = "https://api.upbit.com/v1/orderbook"
-# coin_headers = {"Accept": "application/json"}
-# response = requests.request("GET", coin_url, headers=coin_headers)
-#
-# print(response.text)
+coin_total_text = str(coin_total) + " 원"  # 코인 총 평가금액
 
 # 주문 가능 금액
 money = int(float(json_data[0]["balance"]))
 print(money)
 money_text = str(money) + " 원"
-# pprint.pprint(res.json())
 
 # 매수 평균가
 avg_buy = int(float(json_data[0]["avg_buy_price"]))
 print(avg_buy)
 avg_buy_text = str(avg_buy) + " 원"
-# pprint.pprint(res.json())
 
 class Ui_MyPage(QtWidgets.QDialog):
 
@@ -116,8 +109,6 @@ class Ui_MyPage(QtWidgets.QDialog):
                 cnt += 1
                 self.series.append(i["currency"], round((((a/total)*100)), 1))
                 print("percent: ", int((a/total)*100))
-            # print(i)
-            # print(i["currency"])
 
         # self.series.append("BTC", 80)
         # self.series.append("ETH", 70)
@@ -213,7 +204,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.label_currentCoinListTitle = QtWidgets.QLabel(self.frame_2)
         self.label_currentCoinListTitle.setGeometry(QtCore.QRect(411, 570, 150, 70))
         font = QtGui.QFont()
-        font.setFamily("LG Smart UI")
+        font.setFamily("Malgun Gothic")
         font.setPointSize(14)
         font.setBold(True)
         font.setWeight(75)
@@ -221,11 +212,8 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.label_currentCoinListTitle.setObjectName("label_currentCoinListTitle")
 
         # 코인 보유 현황 리스트
-        # self.setGeometry(QtCore.QRect(211, 562, 1645, 460))
-        # self.tableWidget = QTableWidget(self)
-        # self.tableWidget.setColumnCount(8)
-
         self.table_currentCoinList = QtWidgets.QTableWidget(self.frame_2)
+
         self.table_currentCoinList.setGeometry(QtCore.QRect(411, 640, 1200, 320))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -237,10 +225,16 @@ class Ui_MyPage(QtWidgets.QDialog):
             """
             QHeaderView::section {
                 background-color:#404040;
+                border: 0px;
                 color:#FFFFFF;
+            }
+            
+            QTableView {
+                border: 0px;
             }
             """
         )
+
         self.table_currentCoinList.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.table_currentCoinList.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.table_currentCoinList.setAutoScrollMargin(16)
@@ -275,7 +269,10 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.table_currentCoinList.verticalHeader().setCascadingSectionResizes(False)
         self.table_currentCoinList.verticalHeader().setDefaultSectionSize(40)  # 테이블 기본 행 크기
         self.table_currentCoinList.verticalHeader().setHighlightSections(True)
-
+        self.table_currentCoinList.setSelectionMode(QAbstractItemView.NoSelection)  # 선택 불능
+        self.table_currentCoinList.setEditTriggers(QAbstractItemView.NoEditTriggers)  # edit 금지 모드
+        self.table_currentCoinList.setShowGrid(False)  # grid line 숨기기
+        
         # 주문가능금액 프레임
         self.frame_4 = QtWidgets.QFrame(self.frame_2)
         self.frame_4.setGeometry(QtCore.QRect(1050, 281, 514, 204))
@@ -592,7 +589,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         item.setText(_translate("MainWindow", "등락률"))
         self.label_currentCoinListTitle.setText(_translate("MainWindow", "보유현황"))
         self.label_totalMoneyTitle.setText(_translate("MainWindow", "총 평가금액"))
-        self.label_totalMoney.setText(_translate("MainWindow",money_text))
+        self.label_totalMoney.setText(_translate("MainWindow",total_text))
         self.label_availableMoneyTitle.setText(_translate("MainWindow", "주문가능금액"))
         self.label_availableMoney.setText(_translate("MainWindow", money_text))
         self.button_charging.setText(_translate("MainWindow", "충전"))
