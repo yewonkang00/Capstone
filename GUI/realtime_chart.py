@@ -134,15 +134,13 @@ class Ui_MainWindow(object):
         font.setPointSize(8)
         self.label_108.setFont(font)
         self.label_108.setObjectName("label_108")
+
         # 구분선1
         self.line1 = QtWidgets.QFrame(self.frame)
         self.line1.setGeometry(QtCore.QRect(420, 76, 500, 16))
         self.line1.setFrameShape(QtWidgets.QFrame.HLine)
         self.line1.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line1.setObjectName("line1")
-
-
-
 
         # 저가
         self.label_109 = QtWidgets.QLabel(self.frame)
@@ -234,6 +232,7 @@ class Ui_MainWindow(object):
         font.setPointSize(20)
         self.edit_search.setFont(font)
         self.edit_search.setObjectName("edit_search")
+
         # 오른쪽 프레임
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
         self.frame_2.setStyleSheet("background-color:none;")
@@ -241,6 +240,7 @@ class Ui_MainWindow(object):
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
+
         # 호가 테이블
         self.tableWidget = QtWidgets.QTableWidget(self.frame_2)
         self.tableWidget.setGeometry(QtCore.QRect(0, 140, 380, 534))

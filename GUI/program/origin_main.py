@@ -7,18 +7,18 @@ import origin_module
 
 Connect = cx_Oracle.connect("hycoin/hycoin1234@hycoin.crmeanf0td5o.ap-northeast-2.rds.amazonaws.com:1521/HYCOIN")
 Cursor = Connect.cursor()
+secret_key = 'aaa'
+access_key = 'aaa'
 
 class Ui_MainDialog(QtWidgets.QDialog):
-
     user_id = ""
-
     def __init__(self):
         super().__init__()
         self.setupUI()
 
     def setupUI(self):
         self.setObjectName("MainDialog")
-        self.resize(1920, 1080)
+        self.setFixedSize(1920, 1080)
         self.setStyleSheet("background-color: rgb(218, 227, 243);")
 
         self.button_signin = QtWidgets.QPushButton(self)
@@ -77,9 +77,7 @@ class Ui_MainDialog(QtWidgets.QDialog):
         input_pw = self.lineEdit_pw.text()
 
         global user_id
-
-        user_id = "abc"
-        # self.set_id()
+        user_id = input_id
         print("user_id:", user_id)
 
         sql = "select user_pw from USER_DB where user_id = '{}'".format(input_id)
@@ -105,36 +103,34 @@ class Ui_MainDialog(QtWidgets.QDialog):
             pw = result[0][0]
             print("pw : ", pw)
             if(pw == input_pw) :
-                # send_instance_signal = pyqtSignal("PyQt_PyObject")
-                # self.send_instance_signal.connect(self)
-                # widget.setCurrentIndex(widget.currentIndex()+1)
-                # self.display()
-                # self.show()
+                sql = "select API_KEY from USER_DB where user_id = '{}'".format(user_id)
+                print("sql : " + sql)
+                Cursor.execute(sql)
+                global access_key
+                result = Cursor.fetchall()
+                access_key = result[0][0]
+                print("access_key : ", access_key)
 
-                # self.user_signal.emit(input_id)
+                sql = "select SECRET_KEY from USER_DB where user_id = '{}'".format(user_id)
+                print("sql : " + sql)
+                Cursor.execute(sql)
+                global secret_key
+                result = Cursor.fetchall()
+                secret_key = result[0][0]
+                print("secret_key : ", secret_key)
 
-                # win = origin_mypage.Ui_MyPage()
-                # r = win.showModal()
+                origin_module.set_id(str(user_id))
+                origin_module.set_info(access_key, secret_key)
+
+                # print("origin_module id", origin_module.user_id)
+                # origin_module.origin_mypage.set_id(str(user_id))
                 win = origin_module.Ui_MyPage()
                 r = win.showModal()
-                # self.closeEvent()
-
+                self.close()
 
             else :
                 msgBox.setText("비밀번호가 잘못 입력 되었습니다.")
                 msgBox.exec_()
-
-    # def button_signup_event(self):
-    #     win = origin_signup.Ui_SignUp()
-    #     r = win.showModal()
-
-    # @pyqtSlot(str)
-    # def user_slot(self, arg1):
-    #     print(arg1)
-
-    def set_id(self):
-        global user_id
-        user_id = self.lineEdit_id.text()
 
     def retranslateUi(self, MainDialog):
         _translate = QtCore.QCoreApplication.translate
@@ -143,26 +139,13 @@ class Ui_MainDialog(QtWidgets.QDialog):
         self.button_signup.setText(_translate("MainDialog", "Sign up"))
         self.label.setText(_translate("MainDialog", "<html><head/><body><p align=\"center\"><span style=\" font-size:20pt; font-weight:600; color:#000000;\">SIGN IN</span></p></body></html>"))
 
-    # def display_signup(self):
-    #     self.w = origin_signup.Ui_SignUp()
-
-    def closeEvent(self, event):
-        self.close()
-
-    def show(self):
-        super().show()
-
-    # def get_id(self):
-    #     user_id = self.lineEdit_id.text()
-    #     print("user_id:", user_id)
-
-# app = QtWidgets.QApplication(sys.argv)
-# window = Ui_MainDialog()
-# window.show()
-# sys.exit(app.exec())
+    def showModal(self):
+        return super().exec_()
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     win = Ui_MainDialog()
+    win.setWindowTitle('HYCOIN')
+    # win.showMaximized()
     win.show()
     sys.exit(app.exec_())

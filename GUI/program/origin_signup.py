@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+# from myPageUi import Ui_MyPage
 import cx_Oracle
 from PyQt5.QtWidgets import QMessageBox, QComboBox
 from PyQt5.QtCore import *
