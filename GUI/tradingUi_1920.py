@@ -10,9 +10,9 @@ from urllib.parse import urlencode
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIntValidator,QDoubleValidator,QFont
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
-access_key = 'DrxzfF77n9TRDIxlpEz9A3gNXugxxmS3bT3ID4U9'
-secret_key = 'XqfatZ9urxp8LCzRuQFFJnKjngl2Ex3tfKKu64AR'
-user_email = 'minjun623@naver.com'
+access_key = ''
+secret_key = ''
+user_email = ''
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def trade(self):
