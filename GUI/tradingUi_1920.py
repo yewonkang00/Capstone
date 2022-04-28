@@ -1,13 +1,12 @@
-import time
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-import os
 import jwt
 import uuid
 import requests
 import hashlib
+import os
 from urllib.parse import urlencode
-from PyQt5.QtWidgets import QMessageBox
+
+from PyQt5.QtCore import QTimer,Qt
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem,QCompleter
 from PyQt5.QtGui import QIntValidator,QDoubleValidator,QFont
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 access_key = ''
@@ -15,6 +14,22 @@ secret_key = ''
 user_email = ''
 
 class Ui_MainWindow(QtWidgets.QWidget):
+    def coin_change(self):
+        #print(self.edit_search.text())
+        if not(self.edit_search.text() in self.coin_list):
+            self.edit_search.setText('비트코인/BTC')
+        tmp = self.edit_search.text().split('/')
+        self.now_coin = tmp[1]
+        self.now_coin_KRW = tmp[0]
+
+        self.label_coinName.setText(self.now_coin_KRW)
+        self.label_coinNickname.setText(self.now_coin+"/KRW")
+        self.button_quantity.setText("수량("+self.now_coin+")")
+        self.label_5.setText(self.now_coin)
+        url = 'https://static.upbit.com/logos/'+self.now_coin+'.png'
+        os.system("curl " + url + " > temp.png")
+        self.image_coin.setPixmap(QtGui.QPixmap("./temp.png"))
+        self.change()
     def trade(self):
         if self.safty:
             if self.isEmpty():
@@ -79,7 +94,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     QMessageBox.about(self, 'error!', res['error']['message'])
 
         self.reset()
-    def trade_list(self):
+    def trade_list(self):#거래내역, 미채결 클릭시
         if self.buy_sell < 2 or self.buy_sell % 2 == 1:
             self.pushButton_3.setText('미체결')
             self.pushButton_3.setStyleSheet("Color : white;background-color:#6756BE;")
@@ -236,8 +251,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.order_ratio100.move(603, 727)
             self.order_ratio_self.move(704, 727)
         self.reset()
-    def About_event(self):
-        QMessageBox.about(self, 'About Title', 'About Message')
     def btn_plus(self):
         if self.buy_price.text() == '':
             self.buy_price.setText('0')
@@ -281,13 +294,51 @@ class Ui_MainWindow(QtWidgets.QWidget):
         response = requests.request("GET", url, params=querystring)
         response = response.json()
         return int(response[0]['trade_price'])
+    def setData(self):
+        #호가창 업데이트
+        url = "https://api.upbit.com/v1/orderbook?markets=KRW-"+str(self.now_coin)
+        headers = {"Accept": "application/json"}
+        response = requests.request("GET", url, headers=headers)
+        response = response.json()
+        response_ = response[0]['orderbook_units']
+
+        for i in range(0, 10, 1):
+            self.tableWidget.setItem(i, 1, QTableWidgetItem((str(response_[9-i]['ask_size']))))
+            self.tableWidget.setItem(i, 2, QTableWidgetItem((str(response_[9-i]['ask_price']))))
+        for i in range(0, 10, 1):
+            self.tableWidget.setItem(i+10, 2, QTableWidgetItem((str(response_[i]['bid_price']))))
+            self.tableWidget.setItem(i+10, 3, QTableWidgetItem((str(response_[i]['bid_size']))))
+        self.label_40.setText(str(response[0]['total_ask_size']))
+        self.label_41.setText(str(response[0]['total_bid_size']))
+        #우측 상단 정보 업데이트
+        url = "https://api.upbit.com/v1/ticker?markets=KRW-"+str(self.now_coin)
+        headers = {"Accept": "application/json"}
+
+        response = requests.request("GET", url, headers=headers)
+        response = response.json()
+        self.label_4.setText(str(round(response[0]['acc_trade_volume_24h'], 2)))
+        self.label_6.setText(str(int(response[0]['acc_trade_price_24h']//1000000)))
+        self.label_10.setText(str(response[0]['highest_52_week_price']))
+        self.label_11.setText('('+response[0]['highest_52_week_date']+')')
+        self.label_12.setText(str(response[0]['lowest_52_week_price']))
+        self.label_13.setText('('+response[0]['lowest_52_week_date']+')')
+        self.label_15.setText(str(response[0]['prev_closing_price']))
+        self.label_17.setText(str(response[0]['high_price']))
+        self.label_20.setText(str(response[0]['low_price']))
+        self.label_18.setText(str(round((response[0]['high_price']/response[0]['prev_closing_price']-1)*100, 2))+'%')
+        self.label_21.setText(str(round((response[0]['low_price']/response[0]['prev_closing_price']-1)*100, 2))+'%')
     def __init__(self):
         super().__init__()
+        timer = QTimer(self)
+        timer.start(1000)
+        self.tmp = 0
+        timer.timeout.connect(self.setData)
         self.safty = 1
         self.buy_sell = 0  # 0 : 매수, 1 : 매도 2> : 거래 리스트
         self.limit_market = 0  # 0 : 지정가, 1 : 시장가
 
-        self.now_coin = 'SAND'
+        self.now_coin = 'BTC'
+        self.now_coin_KRW = '비트코인'
         self.pnm_value = 1000
         self.setWindowTitle("HY-coin")
         self.setFixedSize(1920, 1080)
@@ -303,6 +354,27 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.edit_search.setFont(font)
         self.edit_search.setObjectName("edit_search")
 
+        # 단어 리스트
+        url = "https://api.upbit.com/v1/market/all?isDetails=false"
+
+        headers = {"Accept": "application/json"}
+
+        response = requests.get(url, headers=headers)
+        response = response.json()
+        self.coin_list = []
+        for i in response:
+            if i['market'][:3] == 'KRW':
+                self.coin_list.append(i['korean_name'] + '/' + i['market'][4:])
+
+        # Completer 생성 및 QCombo 연결
+        completer = QCompleter(self.coin_list)
+        # 포함된 항목 모두 검색
+        completer.setFilterMode(Qt.MatchContains)
+        # 대소문자
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        #검색창에 자동완성 연결
+        self.edit_search.setCompleter(completer)
+        self.edit_search.returnPressed.connect(self.coin_change)
         # 검색창 돋보기 이미지
         self.image_search = QtWidgets.QGraphicsView(self.centralwidget)
         self.image_search.setGeometry(QtCore.QRect(204, 56, 49, 49))
@@ -319,14 +391,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.frame.setStyleSheet("background-color:none;")
 
         # 코인이미지
-        self.image_coin = QtWidgets.QGraphicsView(self.frame)
-        self.image_coin.setGeometry(QtCore.QRect(211, 24, 49, 49))
-        self.image_coin.setStyleSheet("border-image: url(resources/bitcoin.png); background-repeat: no-repeat;")
+        self.image_coin = QtWidgets.QLabel(self.frame)
+        self.image_coin.setGeometry(QtCore.QRect(211, 24, 64, 64))
         self.image_coin.setObjectName("image_coin")
 
         # 코인명(예.비트코인)
         self.label_coinName = QtWidgets.QLabel(self.frame)
-        self.label_coinName.setGeometry(QtCore.QRect(267, 14, 281, 70))
+        self.label_coinName.setGeometry(QtCore.QRect(280, 14, 281, 70))
         self.label_coinName.setObjectName("label_coinName")
         font = QtGui.QFont()
         font.setPointSize(17)
@@ -335,7 +406,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         # 코인명 옆에 회색으로 알파벳 코드(예.BTC)
         self.label_coinNickname = QtWidgets.QLabel(self.frame)
-        self.label_coinNickname.setGeometry(QtCore.QRect(372, 4, 211, 98))
+        self.label_coinNickname.setGeometry(QtCore.QRect(283, 20, 211, 98))
         self.label_coinNickname.setObjectName("label_coinNickname")
         font = QtGui.QFont()
         font.setPointSize(11)
@@ -356,7 +427,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.tableWidget = QtWidgets.QTableWidget(self.frame)
         self.tableWidget.setGeometry(QtCore.QRect(267, 141, 632, 740))
         self.tableWidget.setRowCount(20)  # 테이블 기본 행 갯수
-        self.tableWidget.setColumnCount(7)  # 테이블 기본 열 갯수
+        self.tableWidget.setColumnCount(5)  # 테이블 기본 열 갯수
         self.tableWidget.setObjectName("tableWidget")
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(0, item)
@@ -371,7 +442,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.tableWidget.horizontalHeader().setStretchLastSection(False)
         self.tableWidget.verticalHeader().setVisible(False)  # 수직헤더
         self.tableWidget.horizontalHeader().setVisible(False)  # 수평헤더
-        self.tableWidget.horizontalHeader().setDefaultSectionSize(90)  # 테이블 기본 열 크기
+        self.tableWidget.horizontalHeader().setDefaultSectionSize(126)  # 테이블 기본 열 크기
         self.tableWidget.verticalHeader().setDefaultSectionSize(35)  # 테이블 기본 행 크기
 
         # 테이블 헤더: 일괄취소(파란색)
@@ -800,7 +871,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 
 
-
         # 테이블 헤더: 파란색 매물
         self.label_40 = QtWidgets.QLabel(self.frame)
         self.label_40.setGeometry(QtCore.QRect(394, 842, 127, 49))
@@ -936,48 +1006,21 @@ class Ui_MainWindow(QtWidgets.QWidget):
             }
             """
         )
-        self.label_coinName.setText("비트코인")
-        self.label_coinNickname.setText("BTC/KRW")
         self.label_3.setText("호가")
-        item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText("일괄취소")
-        item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText("9,999")
-        item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText("수량(BTC)")
-        item = self.tableWidget.horizontalHeaderItem(3)
-        item.setText("9,999")
-        item = self.tableWidget.horizontalHeaderItem(4)
-        item.setText("일괄취소")
         self.label.setText("거래량")
         self.label_2.setText("거래대금")
-        self.label_4.setText("6,875")
-        self.label_5.setText("BTC")
-        self.label_6.setText("472,668")
         self.label_7.setText("백만원")
         self.label_8.setText("(최근 24시간)")
         self.label_9.setText("52주 최고")
-        self.label_10.setText("81,994,000")
-        self.label_11.setText("(2021.04.14)")
-        self.label_12.setText("81,994,000")
-        self.label_13.setText("(2021.04.14)")
         self.label_14.setText("52주 최저")
-        self.label_15.setText("81,994,000")
         self.label_16.setText("전일종가")
-        self.label_17.setText("81,994,000")
         self.label_19.setText("당일고가")
-        self.label_20.setText("81,994,000")
         self.label_22.setText("당일저가")
-        self.label_18.setText("+3.35%")
-        self.label_21.setText("-0.37%")
-        self.label_40.setText("9,999")
-        self.label_41.setText("9,999")
         self.button_cancel_1.setText("일괄취소")
         self.button_cancel_2.setText("일괄취소")
-        self.button_quantity.setText("수량(BTC)")
         self.reset()
         self.show()
-
+        self.coin_change()
 if __name__ == "__main__":
     import sys
 
