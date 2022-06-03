@@ -394,6 +394,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def buy_sell_click(self, code):
         self.tradeview.hide()
         self.tradeview_1.hide()
+        self.trade_wait = 0
         if code != self.buy_sell:
             self.buy_sell = code
             self.limit_market = 0
