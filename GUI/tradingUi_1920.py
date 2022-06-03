@@ -4,9 +4,9 @@ import requests
 import hashlib
 import os
 from urllib.parse import urlencode
-
+import datetime as dt
 from PyQt5.QtCore import QTimer,Qt
-from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem,QCompleter
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QCompleter, QHeaderView, QAbstractItemView
 from PyQt5.QtGui import QIntValidator,QDoubleValidator,QFont
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 access_key = ''
@@ -15,7 +15,6 @@ user_email = ''
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def coin_change(self):
-        #print(self.edit_search.text())
         if not(self.edit_search.text() in self.coin_list):
             self.edit_search.setText('비트코인/BTC')
         tmp = self.edit_search.text().split('/')
@@ -30,6 +29,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         os.system("curl " + url + " > temp.png")
         self.image_coin.setPixmap(QtGui.QPixmap("./temp.png"))
         self.change()
+
     def trade(self):
         if self.safty:
             if self.isEmpty():
@@ -92,17 +92,146 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     QMessageBox.about(self, 'success!', '거래를 성공했습니다!')
                 else :
                     QMessageBox.about(self, 'error!', res['error']['message'])
+        # 보유항목 설정
+        payload = {
+            'access_key': access_key,
+            'nonce': str(uuid.uuid4()),
+        }
 
+        jwt_token = jwt.encode(payload, secret_key)
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.get("https://api.upbit.com/v1/accounts", headers=headers)
+        self.comboBox.clear()
+        for i in res.json():
+            if i['currency'] != 'KRW':
+                self.comboBox.addItem(self.coin_dic[i['currency']] + '/' + i['currency'])
         self.reset()
+    def combobox_changed(self, item):
+        self.edit_search.setText(item)
+        tmp = self.edit_search.text().split('/')
+        self.now_coin = tmp[1]
+        self.now_coin_KRW = tmp[0]
+
+        self.label_coinName.setText(self.now_coin_KRW)
+        self.label_coinNickname.setText(self.now_coin + "/KRW")
+        self.button_quantity.setText("수량(" + self.now_coin + ")")
+        self.label_5.setText(self.now_coin)
+        url = 'https://static.upbit.com/logos/' + self.now_coin + '.png'
+        os.system("curl " + url + " > temp.png")
+        self.image_coin.setPixmap(QtGui.QPixmap("./temp.png"))
+        self.change()
+    def celldoubleclicked_event(self, row, col):
+        if col == 4:
+            query = {
+                'uuid': self.wait_trade[row]['uuid'],
+            }
+            query_string = urlencode(query).encode()
+
+            m = hashlib.sha512()
+            m.update(query_string)
+            query_hash = m.hexdigest()
+
+            payload = {
+                'access_key': access_key,
+                'nonce': str(uuid.uuid4()),
+                'query_hash': query_hash,
+                'query_hash_alg': 'SHA512',
+            }
+
+            jwt_token = jwt.encode(payload, secret_key)
+            authorize_token = 'Bearer {}'.format(jwt_token)
+            headers = {"Authorization": authorize_token}
+
+            res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
+            QMessageBox.about(self, 'success!', '주문 취소에 성공했습니다!')
+            self.trade_wait -= 1
+            self.trade_list()
     def trade_list(self):#거래내역, 미채결 클릭시
-        if self.buy_sell < 2 or self.buy_sell % 2 == 1:
+        self.buy_sell = 2
+        if self.trade_wait % 2 == 0:
             self.pushButton_3.setText('미체결')
             self.pushButton_3.setStyleSheet("Color : white;background-color:#6756BE;")
-            self.buy_sell = 2
+            self.tradeview_1.hide()
+            self.tradeview.show()
+            #거래내역 보여주기
+            query = {
+                'state': 'done',
+                'limit': 20
+            }
+            query_string = urlencode(query)
+
+            query_string = "{0}".format(query_string).encode()
+            m = hashlib.sha512()
+            m.update(query_string)
+            query_hash = m.hexdigest()
+
+            payload = {
+                'access_key': access_key,
+                'nonce': str(uuid.uuid4()),
+                'query_hash': query_hash,
+                'query_hash_alg': 'SHA512',
+            }
+
+            jwt_token = jwt.encode(payload, secret_key)
+            authorize_token = 'Bearer {}'.format(jwt_token)
+            headers = {"Authorization": authorize_token}
+
+            res = requests.get("https://api.upbit.com/v1/orders", params=query, headers=headers)
+            res = res.json()
+            #'uuid': '65336c61-ff95-4190-b60a-bc05125e4edf', 'side': 'ask', 'ord_type': 'limit', 'price': '2309000.0', 'state': 'done', 'market': 'KRW-ETH',
+            # 'created_at': '2022-05-30T10:13:18+09:00', 'volume': '0.00216651', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0',
+            # 'paid_fee': '2.501235795', 'locked': '0.0', 'executed_volume': '0.00216651', 'trades_count': 1}
+
+
+            for i in range(0, 20, 1):
+                #시간, 종목, 거래구분, 거래 수량, 거래금액(paid_fee * 2000)
+                self.tradeview.setItem(i, 0, QTableWidgetItem((str(res[i]['created_at'][:-6]))))
+                self.tradeview.setItem(i, 1, QTableWidgetItem((str(res[i]['market'][4:]))))
+                self.tradeview.setItem(i, 2, QTableWidgetItem((str('매수' if res[i]['side'] == 'bid' else '매도'))))
+                self.tradeview.setItem(i, 3, QTableWidgetItem((str(res[i]['volume']))))
+                self.tradeview.setItem(i, 4, QTableWidgetItem((str(int(float(res[i]['paid_fee'])*2000)))))
         else :
             self.pushButton_3.setText('거래내역')
+            self.tradeview.hide()
+            self.tradeview_1.show()
+            # 미채결 보여주기
+            query = {
+                'state': 'wait',
+                'limit': 20
+            }
+            query_string = urlencode(query)
+
+            query_string = "{0}".format(query_string).encode()
+            m = hashlib.sha512()
+            m.update(query_string)
+            query_hash = m.hexdigest()
+
+            payload = {
+                'access_key': access_key,
+                'nonce': str(uuid.uuid4()),
+                'query_hash': query_hash,
+                'query_hash_alg': 'SHA512',
+            }
+
+            jwt_token = jwt.encode(payload, secret_key)
+            authorize_token = 'Bearer {}'.format(jwt_token)
+            headers = {"Authorization": authorize_token}
+
+            res = requests.get("https://api.upbit.com/v1/orders", params=query, headers=headers)
+            self.wait_trade = res.json()
+            res = res.json()
+            self.tradeview_1.clearContents()
+            for i in range(0, min(20, len(res)), 1):
+                #['거래종목', '거래 구분', '거래수량', '거래금액(원)', '주문 취소']
+                self.tradeview_1.setItem(i, 0, QTableWidgetItem((str(res[i]['market'][4:]))))
+                self.tradeview_1.setItem(i, 1, QTableWidgetItem((str('매수' if res[i]['side'] == 'bid' else '매도'))))
+                self.tradeview_1.setItem(i, 2, QTableWidgetItem((str(res[i]['remaining_volume']))))
+                self.tradeview_1.setItem(i, 3, QTableWidgetItem((str(float(res[i]['price'])*float(res[i]['remaining_volume'])))))
+                self.tradeview_1.setItem(i, 4, QTableWidgetItem(('주문 취소')))
             self.pushButton_3.setStyleSheet("Color : white;background-color:#369F36;")
-            self.buy_sell += 1
+        self.trade_wait += 1
 
         self.buy_price.hide()
         self.buy_minus.hide()
@@ -157,6 +286,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.buy_price.setText(str(self.now_price('KRW-'+self.now_coin)))
         self.order_quantity.setText('')
         self.Totalorder.setText('')
+
     def ratio(self, per):
         if self.buy_sell == 0 and self.limit_market == 0:
             # 지정가 매수
@@ -262,6 +392,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             self.buy_price.setText(str(int(self.buy_price.text())-self.pnm_value))
     def buy_sell_click(self, code):
+        self.tradeview.hide()
+        self.tradeview_1.hide()
         if code != self.buy_sell:
             self.buy_sell = code
             self.limit_market = 0
@@ -334,7 +466,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.tmp = 0
         timer.timeout.connect(self.setData)
         self.safty = 1
-        self.buy_sell = 0  # 0 : 매수, 1 : 매도 2> : 거래 리스트
+        self.buy_sell = 0  # 0 : 매수, 1 : 매도
+        self.trade_wait = 0 # 0 : 거래 리스트, 1 :미체결 리스트
         self.limit_market = 0  # 0 : 지정가, 1 : 시장가
 
         self.now_coin = 'BTC'
@@ -353,8 +486,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         font.setPointSize(28)
         self.edit_search.setFont(font)
         self.edit_search.setObjectName("edit_search")
+        self.coin_dic = {}
 
-        # 단어 리스트
+
+
+        # 단어 리스트 & 단어 딕셔너리
         url = "https://api.upbit.com/v1/market/all?isDetails=false"
 
         headers = {"Accept": "application/json"}
@@ -365,7 +501,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         for i in response:
             if i['market'][:3] == 'KRW':
                 self.coin_list.append(i['korean_name'] + '/' + i['market'][4:])
-
+                self.coin_dic[i['market'][4:]] = i['korean_name']
         # Completer 생성 및 QCombo 연결
         completer = QCompleter(self.coin_list)
         # 포함된 항목 모두 검색
@@ -459,6 +595,38 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
 
+        # 주문내역
+        self.tradeview = QtWidgets.QTableWidget(self.frame_2)
+        self.tradeview.setGeometry(QtCore.QRect(85, 550, 720, 480))
+        self.tradeview.setRowCount(20)  # 테이블 기본 행 갯수
+        self.tradeview.setColumnCount(5)  # 테이블 기본 열 갯수
+        self.tradeview.setObjectName("tradeview")
+        self.tradeview.horizontalHeader().setStretchLastSection(False)
+        hlabels = ['거래 시간(utc)', '거래종목', '거래 구분', '거래수량', '거래금액(원)']
+        self.tradeview.setColumnCount(len(hlabels))
+        self.tradeview.setHorizontalHeaderLabels(hlabels)
+        self.tradeview.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tradeview.verticalHeader().setVisible(False)  # 수직헤더
+        self.tradeview.horizontalHeader().setDefaultSectionSize(140)  # 테이블 기본 열 크기
+        self.tradeview.verticalHeader().setDefaultSectionSize(35)  # 테이블 기본 행 크기
+        self.tradeview.hide()
+        # 미체결 목록
+        self.tradeview_1 = QtWidgets.QTableWidget(self.frame_2)
+        self.tradeview_1.setGeometry(QtCore.QRect(85, 550, 720, 480))
+        self.tradeview_1.setRowCount(20)  # 테이블 기본 행 갯수
+        self.tradeview_1.setColumnCount(5)  # 테이블 기본 열 갯수
+        self.tradeview_1.setObjectName("tradeview_1")
+        self.tradeview_1.horizontalHeader().setStretchLastSection(False)
+        hlabels = ['거래종목', '거래 구분', '거래수량', '거래금액(원)', '주문 취소']
+        self.tradeview_1.setColumnCount(len(hlabels))
+        self.tradeview_1.setHorizontalHeaderLabels(hlabels)
+        self.tradeview_1.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tradeview_1.verticalHeader().setVisible(False)  # 수직헤더
+        self.tradeview_1.horizontalHeader().setDefaultSectionSize(140)  # 테이블 기본 열 크기
+        self.tradeview_1.verticalHeader().setDefaultSectionSize(35)  # 테이블 기본 행 크기
+        self.tradeview_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tradeview_1.cellDoubleClicked.connect(self.celldoubleclicked_event)
+        self.tradeview_1.hide()
         # 매수버튼
         self.pushButton = QtWidgets.QPushButton(self.frame_2)
         self.pushButton.setGeometry(QtCore.QRect(84, 450, 246, 84))
@@ -666,11 +834,27 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.comboBox = QtWidgets.QComboBox(self.frame_3)
         self.comboBox.setGeometry(QtCore.QRect(56, 0, 281, 49))
         self.comboBox.setObjectName("comboBox")
-        self.comboBox.addItem("보유종목")
         font = QtGui.QFont()
         font.setPointSize(17)
         font.setBold(True)
         self.comboBox.setFont(font)
+
+        # self.comboBox.currentTextChanged.connect(self.combobox_changed)
+        # 보유항목 설정
+        payload = {
+            'access_key': access_key,
+            'nonce': str(uuid.uuid4()),
+        }
+
+        jwt_token = jwt.encode(payload, secret_key)
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.get("https://api.upbit.com/v1/accounts", headers=headers)
+        self.comboBox.clear()
+        for i in res.json():
+            if i['currency'] != 'KRW':
+                self.comboBox.addItem(self.coin_dic[i['currency']] + '/' + i['currency'])
 
         # 거래량
         self.label = QtWidgets.QLabel(self.frame_3)
@@ -896,7 +1080,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.button_cancel_2.setGeometry(QtCore.QRect(773, 842, 127, 49))
         self.button_cancel_2.setObjectName("button_cancel_2")
         self.button_cancel_2.setStyleSheet("border: 1px solid grey; background-color:white; color: red;")
-
         # 왼쪽 메뉴 프레임
         self.frame = QtWidgets.QFrame(self.centralwidget)
         self.frame.setGeometry(QtCore.QRect(0, 0, 140, 1079))
