@@ -1,71 +1,29 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-import tradingUi
 import jwt
 import uuid
 import requests
-import pprint
 from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
-import origin_main
 import cx_Oracle
+import origin_module
 
 Connect = cx_Oracle.connect("hycoin/hycoin1234@hycoin.crmeanf0td5o.ap-northeast-2.rds.amazonaws.com:1521/HYCOIN")
 Cursor = Connect.cursor()
 
-access_key = 'zSbtYUz3KVLnBa3n4LqNPOQCJxT6hdDtgEiyyLsa'
-secret_key = 'xJmMQby5D7RepbxVGBmXTQ7Jh95jxahCJNEtM7Mx'
+access_key = 'aaa'
+secret_key = 'aaa'
 server_url = 'https://api.upbit.com'
 
-payload = {
-    'access_key': access_key,
-    'nonce': str(uuid.uuid4()),
-}
-
-jwt_token = jwt.encode(payload, secret_key)
-authorize_token = 'Bearer {}'.format(jwt_token)
-headers = {"Authorization": authorize_token}
-
-# 코인 목록
-res = requests.get(server_url + "/v1/accounts", headers=headers)
-json_data = res.json()
+user_id = ""
+total_text = ""  # 총 평가금액
+coin_total_text = ""
+money_text = ""
+avg_buy_text = ""
 total = 0  # 총 평가금액
 price_arr = []  # 코인 평가 금액 배열
-url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
-for i in json_data:
-    print(i)
-    if i["currency"] != "KRW":
-        headers2 = {"Accept": "application/json"}
-        response = requests.request("GET", str(url+i["unit_currency"]+"-"+i["currency"]), headers=headers2)
-        data = response.json()
-        # print(response.text)
-        # print("test: ", data[0]["trade_price"])
-        a = int(float(data[0]["trade_price"]) * float(i["balance"]))
-        print("a : ", a)
-        price_arr.append(a)
-        total += a
-
-    else :
-        total += int(float(i["balance"]))
-
-    print("total : ", total)
-    print(i["currency"])
-
-total_text = str(total) + " 원"  # 총 평가금액
-coin_total = total - int(float(json_data[0]["balance"]))
-coin_total_text = str(coin_total) + " 원"  # 코인 총 평가금액
-
-# 주문 가능 금액
-money = int(float(json_data[0]["balance"]))
-print(money)
-money_text = str(money) + " 원"
-
-# 매수 평균가
-avg_buy = int(float(json_data[0]["avg_buy_price"]))
-print(avg_buy)
-avg_buy_text = str(avg_buy) + " 원"
 
 class Ui_MyPage(QtWidgets.QDialog):
 
@@ -74,10 +32,57 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.setupUI()
 
     def setupUI(self):
-        # global id
-        #user_id = origin_main.Ui_MainDialog.user_id
-        # id = origin_main.Ui_MainDialog.button_signin_event.user_id
-        # print("*id : ", user_id)
+        global access_key, secret_key
+        access_key = origin_module.access_key
+        secret_key = origin_module.secret_key
+
+        payload = {
+            'access_key': access_key,
+            'nonce': str(uuid.uuid4()),
+        }
+        jwt_token = jwt.encode(payload, secret_key)
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        # 코인 목록
+        res = requests.get(server_url + "/v1/accounts", headers=headers)
+        json_data = res.json()
+        print("json_data: ",json_data)
+        global total, price_arr
+        url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
+        for i in json_data:
+            print(i)
+            if i['currency'] != "KRW":
+                headers2 = {"Accept": "application/json"}
+                response = requests.request("GET", str(url + i["unit_currency"] + "-" + i["currency"]),
+                                            headers=headers2)
+                data = response.json()
+                # print(response.text)
+                # print("test: ", data[0]["trade_price"])
+                a = int(float(data[0]["trade_price"]) * float(i["balance"]))
+                price_arr.append(a)
+                total += a
+
+            else:
+                total += int(float(i["balance"]))
+
+            print("total : ", total)
+            print(i["currency"])
+
+        global total_text, coin_total_text, money_text, avg_buy_text
+        total_text = str(total) + " 원"  # 총 평가금액
+        coin_total = total - int(float(json_data[0]["balance"]))
+        coin_total_text = str(coin_total) + " 원"  # 코인 총 평가금액
+
+        # 주문 가능 금액
+        money = int(float(json_data[0]["balance"]))
+        print(money)
+        money_text = str(money) + " 원"
+
+        # 매수 평균가
+        avg_buy = int(float(json_data[0]["avg_buy_price"]))
+        print(avg_buy)
+        avg_buy_text = str(avg_buy) + " 원"
 
         self.setObjectName("MainWindow")
         self.setFixedSize(1920, 1080)
@@ -86,7 +91,7 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 전체프레임
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
-        self.frame_2.setGeometry(QtCore.QRect(0, 0, 1920, 1079))
+        self.frame_2.setGeometry(QtCore.QRect(0, 0, 1920, 1080))
         self.frame_2.setMouseTracking(True)
         self.frame_2.setAutoFillBackground(False)
         self.frame_2.setStyleSheet("background-color: rgb(255,255,255)")
@@ -97,8 +102,6 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 파이 그래프
         self.series = QPieSeries()
-        global total
-        global price_arr
         cnt = 0
         for i in json_data:
             if(i["currency"] == "KRW") :
@@ -213,7 +216,6 @@ class Ui_MyPage(QtWidgets.QDialog):
 
         # 코인 보유 현황 리스트
         self.table_currentCoinList = QtWidgets.QTableWidget(self.frame_2)
-
         self.table_currentCoinList.setGeometry(QtCore.QRect(411, 640, 1200, 320))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -221,6 +223,13 @@ class Ui_MyPage(QtWidgets.QDialog):
         sizePolicy.setHeightForWidth(self.table_currentCoinList.sizePolicy().hasHeightForWidth())
         self.table_currentCoinList.setSizePolicy(sizePolicy)
         self.table_currentCoinList.setMouseTracking(False)
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.table_currentCoinList.horizontalHeader().setFont(font)
+        self.table_currentCoinList.setFont(font)
         self.table_currentCoinList.setStyleSheet(
             """
             QHeaderView::section {
@@ -470,6 +479,7 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
+        self.menuButton_myPage_3.clicked.connect(self.button_mypage_event)
 
         # 메뉴-트레이딩 버튼
         self.menuButton_trading_3 = QtWidgets.QPushButton(self.frame)
@@ -487,9 +497,10 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
+        # self.menuButton_trading_3.clicked.connect(origin_module.event.button_trade_event)
         self.menuButton_trading_3.clicked.connect(self.button_trade_event)
 
-        # 메뉴-거래(사고팔기) 버튼
+        # 메뉴-거래(사고팔기) 버튼 (실시간차트)
         self.menuButton_chart_3 = QtWidgets.QPushButton(self.frame)
         self.menuButton_chart_3.setGeometry(QtCore.QRect(30, 351, 84, 84))
         self.menuButton_chart_3.setObjectName("menuButton_chart_3")
@@ -505,7 +516,7 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
-
+        self.menuButton_chart_3.clicked.connect(self.button_chart_event)
 
         # 메뉴-자동거래 버튼
         self.menuButton_autoTrading_3 = QtWidgets.QPushButton(self.frame)
@@ -523,6 +534,7 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
+        self.menuButton_autoTrading_3.clicked.connect(self.button_auto_event)
 
         # 메뉴-환경설정 버튼
         self.menuButton_setting_3 = QtWidgets.QPushButton(self.frame)
@@ -557,6 +569,7 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
+        self.menuButton_exit_3.clicked.connect(self.button_close_event)
 
         # self.setCentralWidget(self.centralwidget)
 
@@ -564,7 +577,27 @@ class Ui_MyPage(QtWidgets.QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def button_trade_event(self):
-        # widget.setCurrentIndex(widget.currentIndex()+1)
+        win = origin_module.Ui_Trading()
+        r = win.showModal()
+        self.close()
+
+    def button_chart_event(self):
+        win = origin_module.Ui_Chart()
+        r = win.showModal()
+        self.close()
+
+    def button_auto_event(self):
+        win = origin_module.Ui_Auto()
+        r = win.showModal()
+        self.close()
+
+    def button_mypage_event(self):
+        win = origin_module.Ui_MyPage()
+        # self.close()
+        r = win.showModal()
+        self.close()
+
+    def button_close_event(self):
         self.close()
 
     def retranslateUi(self, MainWindow):
@@ -603,9 +636,30 @@ class Ui_MyPage(QtWidgets.QDialog):
     def showModal(self):
         return super().exec_()
 
+# def set_id(temp_id):
+#     global user_id
+#     user_id = origin_module.user_id
+#     print("new_id in myPage", user_id)
+#     sql = "select API_KEY from USER_DB where user_id = '{}'".format(user_id)
+#     print("sql : " + sql)
+#     Cursor.execute(sql)
+#     global access_key
+#     result = Cursor.fetchall()
+#     access_key = result[0][0]
+#     print("access_key : ", access_key)
+#
+#     sql = "select SECRET_KEY from USER_DB where user_id = '{}'".format(user_id)
+#     print("sql : " + sql)
+#     Cursor.execute(sql)
+#     global secret_key
+#     result = Cursor.fetchall()
+#     secret_key = result[0][0]
+#     print("secret_key : ", secret_key)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     win = Ui_MyPage()
+    win.setWindowTitle('HYCOIN')
+    #win.showMaximized()
     win.show()
     sys.exit(app.exec_())
