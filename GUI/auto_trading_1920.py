@@ -127,7 +127,7 @@ class Worker(QThread):
                     self.coin_trade(0, self.money, target_price)
                     trade_chk = 1
 
-            time.sleep(1/15)
+            time.sleep(1/8)
 
     def resume(self, nc, mon):
         self.running = True
@@ -168,7 +168,7 @@ class Worker(QThread):
                 real_yield = sell_price / target_price - 0.001
                 test_money *= real_yield
             t += dt.timedelta(days=1)
-            time.sleep(1 / 20)
+            time.sleep(1 / 8)
         return test_money
 
 
