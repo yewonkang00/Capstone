@@ -210,8 +210,8 @@ class Ui_SignUp(QtWidgets.QDialog):
             api_key = self.input_api_key.text()
             secret_key = self.input_api_secret.text()
             market = self.input_market.currentText()
-            sql = "insert into USER_DB values('{}','{}','{}','{}','{}','{}','{}')".format(name, email, id, pw, market,
-                                                                                          api_key, secret_key)
+            sql = "insert into USER_DB values('{}','{}','{}','{}','{}','{}','{}','{}')".format(name, email, id, pw, market,
+                                                                                          api_key, secret_key, 1)
             Cursor.execute(sql)
             Connect.commit()
             msgBox.setText("회원가입이 완료되었습니다.")

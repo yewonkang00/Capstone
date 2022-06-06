@@ -9,9 +9,11 @@ Connect = cx_Oracle.connect("hycoin/hycoin1234@hycoin.crmeanf0td5o.ap-northeast-
 Cursor = Connect.cursor()
 secret_key = 'aaa'
 access_key = 'aaa'
+user_email = 'aaa'
 
 class Ui_MainDialog(QtWidgets.QDialog):
     user_id = ""
+    user_pw = ""
     def __init__(self):
         super().__init__()
         self.setupUI()
@@ -91,6 +93,13 @@ class Ui_MainDialog(QtWidgets.QDialog):
 
         print("test : ", cnt == 0)
 
+        sql2 = "select valid from user_db where user_id = '{}'".format(input_id)
+        Cursor.execute(sql2)
+        result2 = Cursor.fetchall()
+        print("result2 : ", result2)
+        valid = result2[0][0]
+        print("valid : ", valid)
+
         msgBox = QMessageBox()
         msgBox.setWindowTitle("Message")
         msgBox.setIcon(QMessageBox.Information)
@@ -99,10 +108,15 @@ class Ui_MainDialog(QtWidgets.QDialog):
             msgBox.setText("존재하지 않는 아이디입니다.")
             msgBox.exec_()
 
+        elif(valid == '0') :
+            msgBox.setText("탈퇴한 아이디입니다.")
+            msgBox.exec_()
+
         else :
-            pw = result[0][0]
-            print("pw : ", pw)
-            if(pw == input_pw) :
+            global user_pw
+            user_pw = result[0][0]
+            print("pw : ", user_pw)
+            if(user_pw == input_pw) :
                 sql = "select API_KEY from USER_DB where user_id = '{}'".format(user_id)
                 print("sql : " + sql)
                 Cursor.execute(sql)
@@ -116,11 +130,23 @@ class Ui_MainDialog(QtWidgets.QDialog):
                 Cursor.execute(sql)
                 global secret_key
                 result = Cursor.fetchall()
+                # print("result :", result)
                 secret_key = result[0][0]
                 print("secret_key : ", secret_key)
 
+                sql = "select user_email from USER_DB where user_id = '{}'".format(user_id)
+                print("sql : " + sql)
+                Cursor.execute(sql)
+                global user_email
+                result = Cursor.fetchall()
+                # print("result :", result)
+                user_email = result[0][0]
+                print("user_email : ", user_email)
+
                 origin_module.set_id(str(user_id))
                 origin_module.set_info(access_key, secret_key)
+                origin_module.set_pw(str(user_pw))
+                origin_module.set_email(str(user_email))
 
                 # print("origin_module id", origin_module.user_id)
                 # origin_module.origin_mypage.set_id(str(user_id))

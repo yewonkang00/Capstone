@@ -16,8 +16,6 @@ market_text = ""
 current_coin = "KRW-BTC"
 # access_key = 'aaa'
 # secret_key = 'aaa'
-access_key = 'zSbtYUz3KVLnBa3n4LqNPOQCJxT6hdDtgEiyyLsa'
-secret_key = 'xJmMQby5D7RepbxVGBmXTQ7Jh95jxahCJNEtM7Mx'
 
 class Ui_Chart(QtWidgets.QDialog):
 
@@ -49,7 +47,7 @@ class Ui_Chart(QtWidgets.QDialog):
         for k in range(cnt):
             self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
             self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
-            self.tableWidget.setItem(k, 2, QTableWidgetItem(str("{:g}".format((new_df['전일대비'][k])))))
+            self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
             self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k]))+" 백만")))
 
         self.tableWidget.setRowCount(len(new_df))
@@ -70,9 +68,9 @@ class Ui_Chart(QtWidgets.QDialog):
 
         print(market_text)
 
-        global access_key, secret_key
-        access_key = origin_module.access_key
-        secret_key = origin_module.secret_key
+        # global access_key, secret_key
+        # access_key = origin_module.access_key
+        # secret_key = origin_module.secret_key
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -81,33 +79,34 @@ class Ui_Chart(QtWidgets.QDialog):
         self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setStyleSheet("background-color: rgb(255,255,255)")
 
-        # 전체프레임
-        self.full_frame = QtWidgets.QFrame(self.centralwidget)
-        self.full_frame.setGeometry(QtCore.QRect(0, 0, 1920, 1080))
-        self.full_frame.setMouseTracking(True)
-        self.full_frame.setAutoFillBackground(False)
-        self.full_frame.setStyleSheet("background-color: rgb(255,255,255)")
-        self.full_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.full_frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.full_frame.setMidLineWidth(0)
-        self.full_frame.setObjectName("full_frame")
+        # # 전체프레임
+        # self.full_frame = QtWidgets.QFrame(self.centralwidget)
+        # self.full_frame.setGeometry(QtCore.QRect(0, 0, 1920, 1080))
+        # self.full_frame.setMouseTracking(True)
+        # self.full_frame.setAutoFillBackground(False)
+        # self.full_frame.setStyleSheet("background-color: rgb(255,255,255)")
+        # self.full_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        # self.full_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        # self.full_frame.setMidLineWidth(0)
+        # self.full_frame.setObjectName("full_frame")
 
         # 왼쪽 프레임
         self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(0, 0, 141, 1079))
+        self.frame.setGeometry(QtCore.QRect(0, 112, 1534, 1435))
         self.frame.setStyleSheet("background-color: rgb(50, 90, 160)")  # 배경색 설정
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
+        self.frame.setStyleSheet("background-color:none;")
 
         # 실시간 차트
-        self.webEngineView = QtWebEngineWidgets.QWebEngineView(self.full_frame)
-        self.webEngineView.setGeometry(QtCore.QRect(175, 140, 1300, 750))
+        self.webEngineView = QtWebEngineWidgets.QWebEngineView(self.frame)
+        self.webEngineView.setGeometry(QtCore.QRect(175, 0, 1320, 800))
         self.webEngineView.setUrl(QtCore.QUrl("https://upbit.com/full_chart?code=CRIX.UPBIT.KRW-BTC"))
 
         # 매수 버튼
-        self.pushButton_3 = QtWidgets.QPushButton(self.full_frame)
-        self.pushButton_3.setGeometry(QtCore.QRect(1300, 140, 70, 38))
+        self.pushButton_3 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_3.setGeometry(QtCore.QRect(1300, 0, 70, 38))
         self.pushButton_3.setObjectName("pushButton_3")
         font = QtGui.QFont()
         font.setPointSize(11)
@@ -117,8 +116,8 @@ class Ui_Chart(QtWidgets.QDialog):
         self.pushButton_3.setStyleSheet("border: 1px solid white; background-color:red; color: white;")
 
         # 매도 버튼
-        self.pushButton_4 = QtWidgets.QPushButton(self.full_frame)
-        self.pushButton_4.setGeometry(QtCore.QRect(1370, 140, 70, 38))
+        self.pushButton_4 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_4.setGeometry(QtCore.QRect(1370, 0, 70, 38))
         self.pushButton_4.setObjectName("pushButton_4")
         font = QtGui.QFont()
         font.setPointSize(11)
@@ -262,9 +261,27 @@ class Ui_Chart(QtWidgets.QDialog):
         )
         self.menuButton_autoTrading_3.clicked.connect(self.button_auto_event)
 
+        # 변동성 예측 버튼
+        self.menuButton_predict_3 = QtWidgets.QPushButton(self.frame)
+        self.menuButton_predict_3.setGeometry(QtCore.QRect(30, 633, 84, 84))
+        self.menuButton_predict_3.setObjectName("menuButton_trading_3")
+        self.menuButton_predict_3.setStyleSheet(
+            """
+            QPushButton {
+                border-image: url(resources/predict.png);
+                background-repeat: no-repeat;
+            }
+            QPushButton:pressed {
+                border-image: url(resources/predict_clicked.png);
+                background-repeat: no-repeat;
+            }
+            """
+        )
+        self.menuButton_predict_3.clicked.connect(self.button_predict_event)
+
         # 메뉴-환경설정 버튼
         self.menuButton_setting_3 = QtWidgets.QPushButton(self.frame)
-        self.menuButton_setting_3.setGeometry(QtCore.QRect(30, 633, 84, 84))
+        self.menuButton_setting_3.setGeometry(QtCore.QRect(30, 774, 84, 84))
         self.menuButton_setting_3.setObjectName("menuButton_setting_3")
         self.menuButton_setting_3.setStyleSheet(
             """
@@ -278,7 +295,7 @@ class Ui_Chart(QtWidgets.QDialog):
             }
             """
         )
-        self.menuButton_setting_3.clicked.connect(self.button_close_event)
+        self.menuButton_setting_3.clicked.connect(self.button_setup_event)
 
         # 메뉴-로그아웃 버튼
         self.menuButton_exit_3 = QtWidgets.QPushButton(self.frame)
@@ -333,6 +350,16 @@ class Ui_Chart(QtWidgets.QDialog):
     def button_mypage_event(self):
         win = origin_module.Ui_MyPage()
         # self.close()
+        r = win.showModal()
+        self.close()
+
+    def button_predict_event(self):
+        win = origin_module.Ui_Predict()
+        r = win.showModal()
+        self.close()
+
+    def button_setup_event(self):
+        win = origin_module.Ui_Setup()
         r = win.showModal()
         self.close()
 

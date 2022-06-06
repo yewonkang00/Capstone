@@ -36,6 +36,9 @@ class Ui_MyPage(QtWidgets.QDialog):
         access_key = origin_module.access_key
         secret_key = origin_module.secret_key
 
+        # access_key = 'zSbtYUz3KVLnBa3n4LqNPOQCJxT6hdDtgEiyyLsa'
+        # secret_key = 'xJmMQby5D7RepbxVGBmXTQ7Jh95jxahCJNEtM7Mx'
+
         payload = {
             'access_key': access_key,
             'nonce': str(uuid.uuid4()),
@@ -47,12 +50,21 @@ class Ui_MyPage(QtWidgets.QDialog):
         # 코인 목록
         res = requests.get(server_url + "/v1/accounts", headers=headers)
         json_data = res.json()
-        print("json_data: ",json_data)
+        print("json_data: ", json_data)
+        # if(json_data['error']['message'] == '인증된 IP가 아닙니다.'):
+        # if(json_data == "{'error': {'message': '인증된 IP가 아닙니다.', 'name': 'no_authorization_i_p'}}"):
+        #     msgBox = QMessageBox()
+        #     msgBox.setWindowTitle("Message")
+        #     msgBox.setIcon(QMessageBox.Information)
+        #     msgBox.setText("인증된 IP가 아닙니다.")
+        #     msgBox.exec_()
+        #     self.close()
+
         global total, price_arr
         url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
         for i in json_data:
             print(i)
-            if i['currency'] != "KRW":
+            if i["currency"] != "KRW":
                 headers2 = {"Accept": "application/json"}
                 response = requests.request("GET", str(url + i["unit_currency"] + "-" + i["currency"]),
                                             headers=headers2)
@@ -105,12 +117,12 @@ class Ui_MyPage(QtWidgets.QDialog):
         cnt = 0
         for i in json_data:
             if(i["currency"] == "KRW") :
-                self.series.append("KRW", round((((float(i["balance"])/total))*100), 1))
+                self.series.append("KRW", round((((float(i["balance"])/total))*100)))
 
             else :
                 a = price_arr[cnt]
                 cnt += 1
-                self.series.append(i["currency"], round((((a/total)*100)), 1))
+                self.series.append(i["currency"], round((((a/total)*100))))
                 print("percent: ", int((a/total)*100))
 
         # self.series.append("BTC", 80)
@@ -124,7 +136,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.slice = self.series.slices()[cnt]
         self.slice.setExploded(True)
         self.slice.setLabelVisible(True)
-        self.slice.setPen(QPen(Qt.blue, 2))
+        # self.slice.setPen(QPen(Qt.blue, 2))
         self.slice.setBrush(Qt.blue)
 
         self.chart = QChart()
@@ -148,6 +160,11 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.pie_chart_layout.addWidget(self.chartview)
         self.pie_chart.setLayout(self.pie_chart_layout)
 
+        # # 코인별 비율 표시
+        # self.frame_ratio = QLabel(self)
+        # self.frame_ratio.move(100,100)
+        # self.frame_ratio.setText("hello")
+        
         # 총 평가금액 프레임
         self.frame_3 = QtWidgets.QFrame(self.frame_2)
         self.frame_3.setGeometry(QtCore.QRect(411, 56, 351, 112))
@@ -201,8 +218,6 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.label_totalMoney.setObjectName("label_totalMoney")
         self.verticalLayout.addWidget(self.label_totalMoney)
 
-
-
         # 코인 보유현황 제목
         self.label_currentCoinListTitle = QtWidgets.QLabel(self.frame_2)
         self.label_currentCoinListTitle.setGeometry(QtCore.QRect(411, 570, 150, 70))
@@ -250,7 +265,7 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.table_currentCoinList.setDefaultDropAction(QtCore.Qt.IgnoreAction)
         self.table_currentCoinList.setAlternatingRowColors(True)
         self.table_currentCoinList.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.table_currentCoinList.setRowCount(7)
+        self.table_currentCoinList.setRowCount(cnt)
         self.table_currentCoinList.setColumnCount(8)
         self.table_currentCoinList.setObjectName("table_currentCoinList")
         item = QtWidgets.QTableWidgetItem()
@@ -281,6 +296,35 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.table_currentCoinList.setSelectionMode(QAbstractItemView.NoSelection)  # 선택 불능
         self.table_currentCoinList.setEditTriggers(QAbstractItemView.NoEditTriggers)  # edit 금지 모드
         self.table_currentCoinList.setShowGrid(False)  # grid line 숨기기
+
+        ###################
+        count = 0
+        for i in json_data:
+            if (i["currency"] == "KRW"): pass
+            else:
+                buy_data = int(float(i["balance"]) * float(i["avg_buy_price"]))
+                now_url = "https://api.upbit.com/v1/ticker?markets="
+                headers3 = {"Accept": "application/json"}
+                res = requests.request("GET", now_url + str(i["unit_currency"]) + "-" + str(i["currency"]), headers=headers3)
+                data = res.json()
+                now_price = int(float(data[0]["trade_price"]) * float(i["balance"]))
+                self.table_currentCoinList.setItem(count, 0, QTableWidgetItem(str(i["currency"])))  # 보유코인
+                self.table_currentCoinList.item(count,0).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 1, QTableWidgetItem(str(i["currency"])))  # 평가손익
+                self.table_currentCoinList.item(count, 1).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 2, QTableWidgetItem(str(i["currency"])))  # 수익률
+                self.table_currentCoinList.item(count, 2).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 3, QTableWidgetItem(str(i["balance"])))  # 보유수량
+                self.table_currentCoinList.item(count, 3).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 4, QTableWidgetItem(str(now_price)))  # 평가금액
+                self.table_currentCoinList.item(count, 4).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 5, QTableWidgetItem(str(i["avg_buy_price"])))  # 매수평균가
+                self.table_currentCoinList.item(count, 5).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 6, QTableWidgetItem(str(int(data[0]["trade_price"]))))  # 현재가
+                self.table_currentCoinList.item(count, 6).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                self.table_currentCoinList.setItem(count, 7, QTableWidgetItem(str(buy_data)))  # 매수금액
+                self.table_currentCoinList.item(count, 7).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                count += 1
         
         # 주문가능금액 프레임
         self.frame_4 = QtWidgets.QFrame(self.frame_2)
@@ -536,9 +580,27 @@ class Ui_MyPage(QtWidgets.QDialog):
         )
         self.menuButton_autoTrading_3.clicked.connect(self.button_auto_event)
 
+        # 변동성 예측 버튼
+        self.menuButton_predict_3 = QtWidgets.QPushButton(self.frame)
+        self.menuButton_predict_3.setGeometry(QtCore.QRect(30, 633, 84, 84))
+        self.menuButton_predict_3.setObjectName("menuButton_trading_3")
+        self.menuButton_predict_3.setStyleSheet(
+            """
+            QPushButton {
+                border-image: url(resources/predict.png);
+                background-repeat: no-repeat;
+            }
+            QPushButton:pressed {
+                border-image: url(resources/predict_clicked.png);
+                background-repeat: no-repeat;
+            }
+            """
+        )
+        self.menuButton_predict_3.clicked.connect(self.button_predict_event)
+        
         # 메뉴-환경설정 버튼
         self.menuButton_setting_3 = QtWidgets.QPushButton(self.frame)
-        self.menuButton_setting_3.setGeometry(QtCore.QRect(30, 633, 84, 84))
+        self.menuButton_setting_3.setGeometry(QtCore.QRect(30, 774, 84, 84))
         self.menuButton_setting_3.setObjectName("menuButton_setting_3")
         self.menuButton_setting_3.setStyleSheet(
             """
@@ -552,6 +614,7 @@ class Ui_MyPage(QtWidgets.QDialog):
             }
             """
         )
+        self.menuButton_setting_3.clicked.connect(self.button_setup_event)
 
         # 메뉴-로그아웃 버튼
         self.menuButton_exit_3 = QtWidgets.QPushButton(self.frame)
@@ -587,7 +650,12 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.close()
 
     def button_auto_event(self):
-        win = origin_module.Ui_Auto()
+        win = origin_module.Ui_MainWindow()
+        r = win.showModal()
+        self.close()
+
+    def button_predict_event(self):
+        win = origin_module.Ui_Predict()
         r = win.showModal()
         self.close()
 
@@ -598,6 +666,11 @@ class Ui_MyPage(QtWidgets.QDialog):
         self.close()
 
     def button_close_event(self):
+        self.close()
+
+    def button_setup_event(self):
+        win = origin_module.Ui_Setup()
+        r = win.showModal()
         self.close()
 
     def retranslateUi(self, MainWindow):
@@ -615,11 +688,11 @@ class Ui_MyPage(QtWidgets.QDialog):
         item = self.table_currentCoinList.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "평가금액"))
         item = self.table_currentCoinList.horizontalHeaderItem(5)
-        item.setText(_translate("MainWindow", "매수금액"))
+        item.setText(_translate("MainWindow", "매수평균가"))
         item = self.table_currentCoinList.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "현재가"))
         item = self.table_currentCoinList.horizontalHeaderItem(7)
-        item.setText(_translate("MainWindow", "등락률"))
+        item.setText(_translate("MainWindow", "매수금액"))
         self.label_currentCoinListTitle.setText(_translate("MainWindow", "보유현황"))
         self.label_totalMoneyTitle.setText(_translate("MainWindow", "총 평가금액"))
         self.label_totalMoney.setText(_translate("MainWindow",total_text))
