@@ -33,8 +33,10 @@ class Ui_MyPage(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        access_key = origin_module.access_key
-        secret_key = origin_module.secret_key
+        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
+        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
+        # access_key = origin_module.access_key
+        # secret_key = origin_module.secret_key
 
         # access_key = 'zSbtYUz3KVLnBa3n4LqNPOQCJxT6hdDtgEiyyLsa'
         # secret_key = 'xJmMQby5D7RepbxVGBmXTQ7Jh95jxahCJNEtM7Mx'
@@ -307,12 +309,14 @@ class Ui_MyPage(QtWidgets.QDialog):
                 headers3 = {"Accept": "application/json"}
                 res = requests.request("GET", now_url + str(i["unit_currency"]) + "-" + str(i["currency"]), headers=headers3)
                 data = res.json()
+                print('xkcg')
+                print(i)
                 now_price = int(float(data[0]["trade_price"]) * float(i["balance"]))
                 self.table_currentCoinList.setItem(count, 0, QTableWidgetItem(str(i["currency"])))  # 보유코인
                 self.table_currentCoinList.item(count,0).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-                self.table_currentCoinList.setItem(count, 1, QTableWidgetItem(str(i["currency"])))  # 평가손익
+                self.table_currentCoinList.setItem(count, 1, QTableWidgetItem(str(now_price-buy_data)))  # 평가손익
                 self.table_currentCoinList.item(count, 1).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-                self.table_currentCoinList.setItem(count, 2, QTableWidgetItem(str(i["currency"])))  # 수익률
+                self.table_currentCoinList.setItem(count, 2, QTableWidgetItem(str(round((int(data[0]["trade_price"])/int(i["avg_buy_price"])-1)*100, 2))+'%'))  # 수익률
                 self.table_currentCoinList.item(count, 2).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
                 self.table_currentCoinList.setItem(count, 3, QTableWidgetItem(str(i["balance"])))  # 보유수량
                 self.table_currentCoinList.item(count, 3).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
@@ -640,38 +644,47 @@ class Ui_MyPage(QtWidgets.QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def button_trade_event(self):
+        origin_module.trade_check = 1
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_chart_event(self):
+        origin_module.chart_check = 1
+        self.close()
         win = origin_module.Ui_Chart()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_auto_event(self):
-        win = origin_module.Ui_MainWindow()
-        r = win.showModal()
         self.close()
+        win = origin_module.Ui_Auto()
+        r = win.showModal()
+        # self.close()
 
     def button_predict_event(self):
+        origin_module.predict_check = 1
+        self.close()
         win = origin_module.Ui_Predict()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_mypage_event(self):
+        self.close()
         win = origin_module.Ui_MyPage()
         # self.close()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_close_event(self):
         self.close()
 
     def button_setup_event(self):
+        self.close()
         win = origin_module.Ui_Setup()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

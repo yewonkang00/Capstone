@@ -24,7 +24,9 @@ class Ui_Trading(QtWidgets.QDialog):
 
         timer = QTimer(self)
         timer.start(1000)
-        timer.timeout.connect(self.setData)
+
+        if origin_module.trade_check == 1:
+            timer.timeout.connect(self.setData)
 
     def coin_change(self):
         if not(self.edit_search.text() in self.coin_list):
@@ -475,10 +477,10 @@ class Ui_Trading(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        # access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        # secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        access_key = origin_module.access_key
-        secret_key = origin_module.secret_key
+        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
+        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
+        # access_key = origin_module.access_key
+        # secret_key = origin_module.secret_key
 
         self.tmp = 0
         self.safty = 1
@@ -1248,38 +1250,52 @@ class Ui_Trading(QtWidgets.QDialog):
                 "currency"]))
 
     def button_trade_event(self):
+        origin_module.trade_check = 1
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_chart_event(self):
+        origin_module.trade_check = 0
+        origin_module.chart_check = 1
+        self.close()
         win = origin_module.Ui_Chart()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_auto_event(self):
+        origin_module.trade_check = 0
+        self.close()
         win = origin_module.Ui_Auto()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_predict_event(self):
+        origin_module.trade_check = 0
+        origin_module.predict_check = 1
+        self.close()
         win = origin_module.Ui_Predict()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_mypage_event(self):
+        origin_module.trade_check = 0
+        self.close()
         win = origin_module.Ui_MyPage()
         # self.close()
         r = win.showModal()
-        self.close()
-
-    def button_setup_event(self):
-        win = origin_module.Ui_Setup()
-        r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_close_event(self):
         self.close()
+
+    def button_setup_event(self):
+        origin_module.trade_check = 0
+        self.close()
+        win = origin_module.Ui_Setup()
+        r = win.showModal()
+        # self.close()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

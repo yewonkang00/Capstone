@@ -113,7 +113,7 @@ class Worker(QThread):
         trade_chk = 0
         while self.running:#
             min30_candle = self.get_30min_candle(dt.datetime.utcnow())
-            print(time_tmp, min30_candle)
+            # print(time_tmp, min30_candle)
             if min30_candle[0]['candle_date_time_utc'][-8:] == '00:00:00' or time_tmp == '':
                 #최초 실행 or 00시 갱신, 주문 냈으면 종가에 전량 매도.
                 day_candle = self.get_day_candle(dt.datetime.utcnow())
@@ -159,6 +159,7 @@ class Worker(QThread):
                     chk_trade = 1
                 if chk == 0 and min_candle[j]['trade_price'] >= target_price:
                     chk = 1
+                    print(min_candle[-1]['candle_date_time_utc'], target_price, min_candle[0]['trade_price'], (min_candle[0]['trade_price']/target_price-1.01)*100)
                 # if chk_trade == 1 and min_candle[j]['trade_price'] < target_price * (1-0.02/scma):
                 if chk_trade == 1 and min_candle[j]['trade_price'] < target_price*0.97:
                     loss_cut_chk = 1
@@ -178,9 +179,20 @@ class Worker(QThread):
 
 #pyqt
 class Ui_Auto(QtWidgets.QDialog):
-
     def __init__(self):
         super().__init__()
+        self.coin_dic = {}
+        self.coin_list = []
+        url = "https://api.upbit.com/v1/market/all?isDetails=false"
+
+        headers = {"Accept": "application/json"}
+
+        response = requests.get(url, headers=headers)
+        response = response.json()
+        for i in response:
+            if i['market'][:3] == 'KRW':
+                self.coin_list.append(i['korean_name'] + '/' + i['market'][4:])
+                self.coin_dic[i['market'][4:]] = i['korean_name']
         self.setupUI()
 
     def coin_change(self):
@@ -235,10 +247,10 @@ class Ui_Auto(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        # access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        # secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        access_key = origin_module.access_key
-        secret_key = origin_module.secret_key
+        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
+        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
+        # access_key = origin_module.access_key
+        # secret_key = origin_module.secret_key
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -379,14 +391,26 @@ class Ui_Auto(QtWidgets.QDialog):
         self.comboBox1.setGeometry(PyQt5.QtCore.QRect(30, 90, 182, 49))
         self.comboBox1.setObjectName("comboBox1")
         self.comboBox1.addItem("보유종목")
-        self.comboBox1.addItem("doge")
-        self.comboBox1.addItem("btc")
         font = PyQt5.QtGui.QFont()
         font.setPointSize(12)
         font.setBold(True)
         self.comboBox1.setFont(font)
         self.comboBox1.setStyleSheet("border: 1px solid blue; background-color:white; color: black;")
+        payload = {
+            'access_key': access_key,
+            'nonce': str(uuid.uuid4()),
+        }
 
+        jwt_token = jwt.encode(payload, secret_key)
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.get("https://api.upbit.com/v1/accounts", headers=headers)
+        # self.comboBox.clear()
+        print('a',self.coin_list)
+        for i in res.json():
+            if i['currency'] != 'KRW':
+                self.comboBox1.addItem(self.coin_dic[i['currency']] + '/' + i['currency'])
         # 주문가능
         self.label_114 = PyQt5.QtWidgets.QLabel(self.frame_2)
         self.label_114.setGeometry(PyQt5.QtCore.QRect(20, 170, 281, 70))
@@ -523,7 +547,7 @@ class Ui_Auto(QtWidgets.QDialog):
         self.table_currentCoinList.setAlternatingRowColors(True)
         self.table_currentCoinList.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table_currentCoinList.setRowCount(30)
-        self.table_currentCoinList.setColumnCount(5)
+        self.table_currentCoinList.setColumnCount(4)
         self.table_currentCoinList.setObjectName("table_currentCoinList")
         item = QtWidgets.QTableWidgetItem()
         self.table_currentCoinList.setHorizontalHeaderItem(0, item)
@@ -533,12 +557,18 @@ class Ui_Auto(QtWidgets.QDialog):
         self.table_currentCoinList.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.table_currentCoinList.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.table_currentCoinList.setHorizontalHeaderItem(4, item)
+        trade_tmp = [['22.06.07', 'BTC', '매도', '1.52%'], ['22.06.06', 'BTC', '매수', ''],['22.05.31', 'BTC', '매도', '2.90%'], ['22.05.30', 'BTC', '매수', ''],['22.05.23', 'BTC', '매도', '-0.10%'], ['22.05.22', 'BTC', '매수', '']]
 
-        self.table_currentCoinList.horizontalHeader().setVisible(True)
+        for i in range(6):
+            for j in range(4):
+                self.table_currentCoinList.setItem(i, j, QTableWidgetItem(trade_tmp[i][j]))
+
+        self.table_currentCoinList.setHorizontalHeaderLabels(["거래일", "종목", "거래구분", "수익률"])
+        font = QtGui.QFont()
+        font.setFamily("Malgun Gothic")
+        self.table_currentCoinList.horizontalHeader().setFont(font)
         self.table_currentCoinList.horizontalHeader().setFixedHeight(45)
-        self.table_currentCoinList.horizontalHeader().setDefaultSectionSize(70)  # 테이블 기본 열 크기
+        self.table_currentCoinList.horizontalHeader().setDefaultSectionSize(88)  # 테이블 기본 열 크기
         self.table_currentCoinList.horizontalHeader().setSortIndicatorShown(True)
         self.table_currentCoinList.horizontalHeader().setStretchLastSection(False)
         self.table_currentCoinList.verticalHeader().setVisible(False)  # 행 번호 안보이게 설정
@@ -688,48 +718,59 @@ class Ui_Auto(QtWidgets.QDialog):
         self.webEngineView.setUrl(QtCore.QUrl("https://upbit.com/full_chart?code=CRIX.UPBIT." + current_coin))
 
     def button_buy_event(self):
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_sell_event(self):
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_trade_event(self):
+        origin_module.trade_check = 1
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_chart_event(self):
+        origin_module.chart_check = 1
+        self.close()
         win = origin_module.Ui_Chart()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_auto_event(self):
+        self.close()
         win = origin_module.Ui_Auto()
         r = win.showModal()
+        # self.close()
+
+    def button_predict_event(self):
+        origin_module.predict_check = 1
         self.close()
+        win = origin_module.Ui_Predict()
+        r = win.showModal()
+        # self.close()
 
     def button_mypage_event(self):
+        self.close()
         win = origin_module.Ui_MyPage()
         # self.close()
         r = win.showModal()
-        self.close()
-
-    def button_predict_event(self):
-        win = origin_module.Ui_Predict()
-        r = win.showModal()
-        self.close()
-
-    def button_setup_event(self):
-        win = origin_module.Ui_Setup()
-        r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_close_event(self):
         self.close()
+
+    def button_setup_event(self):
+        self.close()
+        win = origin_module.Ui_Setup()
+        r = win.showModal()
+        # self.close()
 
     def retranslateUi(self, MainWindow):
         _translate = PyQt5.QtCore.QCoreApplication.translate

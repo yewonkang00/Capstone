@@ -29,7 +29,9 @@ class Ui_Predict(QtWidgets.QDialog):
 
         timer = QTimer(self)
         timer.start(1000)
-        timer.timeout.connect(self.setData)
+
+        if origin_module.predict_check == 1:
+            timer.timeout.connect(self.setData)
 
     # 코인 실시간 데이터 반영
     def setData(self):
@@ -44,10 +46,10 @@ class Ui_Predict(QtWidgets.QDialog):
 
         new_df = new_df.sort_values(by='거래대금', ascending=False)
         new_df = new_df.reset_index(drop=True)
-        print(new_df)
+        # print(new_df)
 
         cnt = len(new_df)
-        print("cnt: ", cnt)
+        # print("cnt: ", cnt)
         for k in range(cnt):
             self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
             self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
@@ -59,6 +61,7 @@ class Ui_Predict(QtWidgets.QDialog):
     def setupUI(self):
         # 전체 KRW 코인
         global market_text
+        market_text = ''
         first = 0
         for i in response.json():
             if "KRW" in i["market"]:
@@ -68,13 +71,15 @@ class Ui_Predict(QtWidgets.QDialog):
                 else:
                     market_text += "%2C%20"
                     market_text += i["market"]
-                print(i["market"])
+                # print(i["market"])
 
-        print(market_text)
+        # print(market_text)
 
         global access_key, secret_key
-        access_key = origin_module.access_key
-        secret_key = origin_module.secret_key
+        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
+        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
+        # access_key = origin_module.access_key
+        # secret_key = origin_module.secret_key
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -92,12 +97,12 @@ class Ui_Predict(QtWidgets.QDialog):
         self.frame.setStyleSheet("background-color:none;")
 
         # 호가창
-        self.chart = QLabel(self)
-        self.chart.setGeometry(QtCore.QRect(443, 150, 1700, 1100))
-        self.pixmap = QPixmap('resources/predict.jpg')
-        self.chart.setPixmap(self.pixmap)
-        self.chart.setContentsMargins(10,10,10,10)
-        self.chart.resize(self.pixmap.width(), self.pixmap.height())
+        # self.chart = QLabel(self)
+        # self.chart.setGeometry(QtCore.QRect(443, 150, 1700, 1100))
+        # self.pixmap = QPixmap('resources/predict.jpg')
+        # self.chart.setPixmap(self.pixmap)
+        # self.chart.setContentsMargins(10,10,10,10)
+        # self.chart.resize(self.pixmap.width(), self.pixmap.height())
 
         # 오른쪽 프레임
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
@@ -334,38 +339,52 @@ class Ui_Predict(QtWidgets.QDialog):
         self.webEngineView.setUrl(QtCore.QUrl("https://upbit.com/full_chart?code=CRIX.UPBIT."+current_coin))
 
     def button_trade_event(self):
+        origin_module.predict_check = 0
+        origin_module.trade_check = 1
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_chart_event(self):
+        origin_module.predict_check = 0
+        origin_module.chart_check = 1
+        self.close()
         win = origin_module.Ui_Chart()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_auto_event(self):
+        origin_module.predict_check = 0
+        self.close()
         win = origin_module.Ui_Auto()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_predict_event(self):
+        origin_module.predict_check = 1
+        self.close()
         win = origin_module.Ui_Predict()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_mypage_event(self):
+        origin_module.predict_check = 0
+        self.close()
         win = origin_module.Ui_MyPage()
         # self.close()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_close_event(self):
         self.close()
 
     def button_setup_event(self):
+        origin_module.predict_check = 0
+        self.close()
         win = origin_module.Ui_Setup()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

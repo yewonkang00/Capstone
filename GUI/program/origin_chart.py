@@ -1,3 +1,5 @@
+import os
+
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 import sys
 import requests
@@ -5,6 +7,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import *
 import pandas as pd
 import origin_module
+import datetime as dt
 
 # 코인 실시간 데이터 불러오기
 coin_url = "https://api.upbit.com/v1/market/all"
@@ -21,6 +24,7 @@ class Ui_Chart(QtWidgets.QDialog):
 
     def __init__(self):
         super().__init__()
+        self.chart_check = 1
         self.setupUI()
 
         timer = QTimer(self)
@@ -29,33 +33,36 @@ class Ui_Chart(QtWidgets.QDialog):
 
     # 코인 실시간 데이터 반영
     def setData(self):
-        chart_res = requests.request("GET", chart_url + market_text, headers=headers)
+        print('self.chart_check :',end='')
+        if self.chart_check == 1:
+            chart_res = requests.request("GET", chart_url + market_text, headers=headers)
+            print(chart_res.json(), chart_url + market_text, self.chart_check)
+            df = pd.DataFrame(chart_res.json())
+            new_df = pd.DataFrame()
+            new_df["코인명"] = df["market"]
+            new_df["현재가"] = df["trade_price"]
+            new_df["전일대비"] = df["signed_change_price"]
+            new_df["거래대금"] = round(df["acc_trade_price_24h"] / 1000000)
 
-        df = pd.DataFrame(chart_res.json())
-        new_df = pd.DataFrame()
-        new_df["코인명"] = df["market"]
-        new_df["현재가"] = df["trade_price"]
-        new_df["전일대비"] = df["signed_change_price"]
-        new_df["거래대금"] = round(df["acc_trade_price_24h"] / 1000000)
+            new_df = new_df.sort_values(by='거래대금', ascending=False)
+            new_df = new_df.reset_index(drop=True)
+            # print(new_df)
 
-        new_df = new_df.sort_values(by='거래대금', ascending=False)
-        new_df = new_df.reset_index(drop=True)
-        print(new_df)
+            cnt = len(new_df)
+            # print("cnt: ", cnt)
+            for k in range(cnt):
+                self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
+                self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
+                self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
+                self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k]))+" 백만")))
 
-        cnt = len(new_df)
-        print("cnt: ", cnt)
-        for k in range(cnt):
-            self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
-            self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
-            self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
-            self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k]))+" 백만")))
-
-        self.tableWidget.setRowCount(len(new_df))
+            self.tableWidget.setRowCount(len(new_df))
 
     def setupUI(self):
         # 전체 KRW 코인
         global market_text
         first = 0
+        market_text = ''
         for i in response.json():
             if "KRW" in i["market"]:
                 if (first == 0):
@@ -323,48 +330,64 @@ class Ui_Chart(QtWidgets.QDialog):
         self.webEngineView.setUrl(QtCore.QUrl("https://upbit.com/full_chart?code=CRIX.UPBIT."+current_coin))
 
     def button_buy_event(self):
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_sell_event(self):
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        #self.close()
 
     def button_trade_event(self):
+        self.chart_check = 1
+        origin_module.trade_check = 1
+        self.close()
         win = origin_module.Ui_Trading()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_chart_event(self):
+        self.chart_check = 1
+        self.close()
         win = origin_module.Ui_Chart()
         r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_auto_event(self):
+        self.chart_check = 1
+        self.close()
         win = origin_module.Ui_Auto()
         r = win.showModal()
+        # self.close()
+
+    def button_predict_event(self):
+        self.chart_check = 1
+        origin_module.predict_check = 1
         self.close()
+        win = origin_module.Ui_Predict()
+        r = win.showModal()
+        # self.close()
 
     def button_mypage_event(self):
+        self.chart_check = 1
+        self.close()
         win = origin_module.Ui_MyPage()
         # self.close()
         r = win.showModal()
-        self.close()
-
-    def button_predict_event(self):
-        win = origin_module.Ui_Predict()
-        r = win.showModal()
-        self.close()
-
-    def button_setup_event(self):
-        win = origin_module.Ui_Setup()
-        r = win.showModal()
-        self.close()
+        # self.close()
 
     def button_close_event(self):
         self.close()
+
+    def button_setup_event(self):
+        self.chart_check = 1
+        self.close()
+        win = origin_module.Ui_Setup()
+        r = win.showModal()
+        # self.close()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

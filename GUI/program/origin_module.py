@@ -36,6 +36,9 @@ user_pw = 'aaa'
 access_key = 'aaa'
 secret_key = 'aaa'
 user_email = 'aaa'
+chart_check = 1
+trade_check = 1
+predict_check = 1
 
 def set_id(temp_id):
     global user_id
