@@ -13,24 +13,6 @@ class event(object):
 
         r = win.showModal()
 
-    # def button_trade_event(self):
-    #     win = Ui_Trading()
-    #     #self.close()
-    #     r = win.showModal()
-    #
-    # def button_chart_event(self):
-    #     win = Ui_Chart()
-    #     #self.close()
-    #     r = win.showModal()
-    #
-    # def button_mypage_event(self):
-    #     win = Ui_MyPage()
-    #     #self.close()
-    #     r = win.showModal()
-    #
-    # def button_close_event(self):
-    #     self.close()
-
 user_id = 'aaa'
 user_pw = 'aaa'
 access_key = 'aaa'

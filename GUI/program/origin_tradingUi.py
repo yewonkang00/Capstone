@@ -194,6 +194,7 @@ class Ui_Trading(QtWidgets.QDialog):
 
             res = requests.get("https://api.upbit.com/v1/orders", params=query, headers=headers)
             res = res.json()
+            print(res)
             #'uuid': '65336c61-ff95-4190-b60a-bc05125e4edf', 'side': 'ask', 'ord_type': 'limit', 'price': '2309000.0', 'state': 'done', 'market': 'KRW-ETH',
             # 'created_at': '2022-05-30T10:13:18+09:00', 'volume': '0.00216651', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0',
             # 'paid_fee': '2.501235795', 'locked': '0.0', 'executed_volume': '0.00216651', 'trades_count': 1}
@@ -477,10 +478,8 @@ class Ui_Trading(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        # access_key = origin_module.access_key
-        # secret_key = origin_module.secret_key
+        access_key = origin_module.access_key
+        secret_key = origin_module.secret_key
 
         self.tmp = 0
         self.safty = 1

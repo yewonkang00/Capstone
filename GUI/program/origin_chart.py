@@ -15,7 +15,6 @@ chart_url = "https://api.upbit.com/v1/ticker?markets="
 headers = {"Accept": "application/json"}
 response = requests.request("GET", coin_url, headers=headers)
 print(response.text)
-market_text = ""
 current_coin = "KRW-BTC"
 # access_key = 'aaa'
 # secret_key = 'aaa'
@@ -31,53 +30,84 @@ class Ui_Chart(QtWidgets.QDialog):
         timer.start(1000)
         timer.timeout.connect(self.setData)
 
+        url = "https://api.upbit.com/v1/market/all?isDetails=false"
+
+        headers = {"Accept": "application/json"}
+
+        response = requests.get(url, headers=headers)
+        response = response.json()
+        self.coin_list = []
+        for i in response:
+            if "KRW" in i["market"]:
+                self.coin_list.append(i['market'])
+    def lineeditTextFunction(self):
+        tx = self.edit_search.text()
+        tx = tx.upper()
+        print(tx)
+        print(1)
+        coin_tmp = []
+        for i in self.coin_list:
+            if tx in i:
+                coin_tmp.append(i)
+        first = 0
+        self.market_text = ''
+        for i in coin_tmp:
+            self.market_text += i+"%2C%20"
+        self.market_text = self.default_market_text if self.market_text == '' else self.market_text[:-6]
+        chart_res = requests.request("GET", 'https://api.upbit.com/v1/ticker?markets=' + self.market_text, headers=headers)
+        df = pd.DataFrame(chart_res.json())
+        new_df = pd.DataFrame()
+        new_df["코인명"] = df["market"]
+        new_df["현재가"] = df["trade_price"]
+        new_df["전일대비"] = df["signed_change_price"]
+        new_df["거래대금"] = round(df["acc_trade_price_24h"] / 1000000)
+
+        new_df = new_df.sort_values(by='거래대금', ascending=False)
+        new_df = new_df.reset_index(drop=True)
+        cnt = len(new_df)
+        # print("cnt: ", cnt)
+        for k in range(cnt):
+            self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
+            self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
+            self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
+            self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k])) + " 백만")))
+
+        self.tableWidget.setRowCount(len(new_df))
     # 코인 실시간 데이터 반영
     def setData(self):
-        print('self.chart_check :',end='')
-        if self.chart_check == 1:
-            chart_res = requests.request("GET", chart_url + market_text, headers=headers)
-            print(chart_res.json(), chart_url + market_text, self.chart_check)
-            df = pd.DataFrame(chart_res.json())
-            new_df = pd.DataFrame()
-            new_df["코인명"] = df["market"]
-            new_df["현재가"] = df["trade_price"]
-            new_df["전일대비"] = df["signed_change_price"]
-            new_df["거래대금"] = round(df["acc_trade_price_24h"] / 1000000)
+        chart_res = requests.request("GET", chart_url + self.market_text, headers=headers)
+        print(chart_res.json(), chart_url + self.market_text, self.chart_check)
+        df = pd.DataFrame(chart_res.json())
+        new_df = pd.DataFrame()
+        new_df["코인명"] = df["market"]
+        new_df["현재가"] = df["trade_price"]
+        new_df["전일대비"] = df["signed_change_price"]
+        new_df["거래대금"] = round(df["acc_trade_price_24h"] / 1000000)
 
-            new_df = new_df.sort_values(by='거래대금', ascending=False)
-            new_df = new_df.reset_index(drop=True)
-            # print(new_df)
+        new_df = new_df.sort_values(by='거래대금', ascending=False)
+        new_df = new_df.reset_index(drop=True)
+        # print(new_df)
 
-            cnt = len(new_df)
-            # print("cnt: ", cnt)
-            for k in range(cnt):
-                self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
-                self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
-                self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
-                self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k]))+" 백만")))
+        cnt = len(new_df)
+        # print("cnt: ", cnt)
+        for k in range(cnt):
+            self.tableWidget.setItem(k, 0, QTableWidgetItem(new_df['코인명'][k]))
+            self.tableWidget.setItem(k, 1, QTableWidgetItem(str(new_df['현재가'][k])))
+            self.tableWidget.setItem(k, 2, QTableWidgetItem(str(new_df['전일대비'][k])))
+            self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k]))+" 백만")))
 
-            self.tableWidget.setRowCount(len(new_df))
+        self.tableWidget.setRowCount(len(new_df))
 
     def setupUI(self):
         # 전체 KRW 코인
-        global market_text
+        self.market_text = ''
         first = 0
-        market_text = ''
         for i in response.json():
             if "KRW" in i["market"]:
-                if (first == 0):
-                    market_text += i["market"]
-                    first = 1
-                else:
-                    market_text += "%2C%20"
-                    market_text += i["market"]
-                print(i["market"])
-
-        print(market_text)
-
-        # global access_key, secret_key
-        # access_key = origin_module.access_key
-        # secret_key = origin_module.secret_key
+                self.market_text += i["market"] + "%2C%20"
+        self.market_text = self.market_text[:-6]
+        # print(i["market"])
+        self.default_market_text = self.market_text
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -121,7 +151,7 @@ class Ui_Chart(QtWidgets.QDialog):
         font.setFamily("Malgun Gothic")
         self.pushButton_3.setFont(font)
         self.pushButton_3.setStyleSheet("border: 1px solid white; background-color:red; color: white;")
-
+        self.pushButton_3.clicked.connect(self.button_trade_event)
         # 매도 버튼
         self.pushButton_4 = QtWidgets.QPushButton(self.frame)
         self.pushButton_4.setGeometry(QtCore.QRect(1370, 0, 70, 38))
@@ -132,7 +162,7 @@ class Ui_Chart(QtWidgets.QDialog):
         font.setFamily("Malgun Gothic")
         self.pushButton_4.setFont(font)
         self.pushButton_4.setStyleSheet("border: 1px solid white; background-color:blue; color: white;")
-
+        self.pushButton_4.clicked.connect(self.button_trade_event)
         # 오른쪽 프레임
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
         self.frame_2.setStyleSheet("background-color:none;")
@@ -154,7 +184,7 @@ class Ui_Chart(QtWidgets.QDialog):
         font.setPointSize(20)
         self.edit_search.setFont(font)
         self.edit_search.setObjectName("edit_search")
-
+        self.edit_search.textChanged.connect(self.lineeditTextFunction)
         # 전체 실시간 코인 테이블
         self.tableWidget = QtWidgets.QTableWidget(self.frame_2)
         self.tableWidget.setGeometry(QtCore.QRect(0, 180, 380, 700))

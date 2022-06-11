@@ -247,10 +247,8 @@ class Ui_Auto(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        # access_key = origin_module.access_key
-        # secret_key = origin_module.secret_key
+        access_key = origin_module.access_key
+        secret_key = origin_module.secret_key
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)

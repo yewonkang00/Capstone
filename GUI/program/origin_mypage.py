@@ -18,11 +18,8 @@ secret_key = 'aaa'
 server_url = 'https://api.upbit.com'
 
 user_id = ""
-total_text = ""  # 총 평가금액
-coin_total_text = ""
-money_text = ""
-avg_buy_text = ""
-total = 0  # 총 평가금액
+
+
 price_arr = []  # 코인 평가 금액 배열
 
 class Ui_MyPage(QtWidgets.QDialog):
@@ -33,13 +30,8 @@ class Ui_MyPage(QtWidgets.QDialog):
 
     def setupUI(self):
         global access_key, secret_key
-        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        # access_key = origin_module.access_key
-        # secret_key = origin_module.secret_key
-
-        # access_key = 'zSbtYUz3KVLnBa3n4LqNPOQCJxT6hdDtgEiyyLsa'
-        # secret_key = 'xJmMQby5D7RepbxVGBmXTQ7Jh95jxahCJNEtM7Mx'
+        access_key = origin_module.access_key
+        secret_key = origin_module.secret_key
 
         payload = {
             'access_key': access_key,
@@ -61,8 +53,8 @@ class Ui_MyPage(QtWidgets.QDialog):
         #     msgBox.setText("인증된 IP가 아닙니다.")
         #     msgBox.exec_()
         #     self.close()
-
-        global total, price_arr
+        self.total = 0
+        global price_arr
         url = "https://api.upbit.com/v1/candles/minutes/1?count=1&market="
         for i in json_data:
             print(i)
@@ -75,28 +67,33 @@ class Ui_MyPage(QtWidgets.QDialog):
                 # print("test: ", data[0]["trade_price"])
                 a = int(float(data[0]["trade_price"]) * float(i["balance"]))
                 price_arr.append(a)
-                total += a
+                self.total += a
 
             else:
-                total += int(float(i["balance"]))
+                self.total += int(float(i["balance"]))
 
-            print("total : ", total)
+            # print("total : ", total)
             print(i["currency"])
 
-        global total_text, coin_total_text, money_text, avg_buy_text
-        total_text = str(total) + " 원"  # 총 평가금액
-        coin_total = total - int(float(json_data[0]["balance"]))
-        coin_total_text = str(coin_total) + " 원"  # 코인 총 평가금액
+        self.total_text = ""  # 총 평가금액
+        self.coin_total_text = ""
+        self.money_text = ""
+        self.avg_buy_text = ""
+        self.total_text = str(self.total) + " 원"  # 총 평가금액
+        # print('total_text', total_text)
+        coin_total = self.total - int(float(json_data[0]["balance"]))
 
+        self.coin_total_text = str(coin_total) + " 원"  # 코인 총 평가금액
+        # print('coin_total_text', coin_total_text)
         # 주문 가능 금액
         money = int(float(json_data[0]["balance"]))
         print(money)
-        money_text = str(money) + " 원"
+        self.money_text = str(money) + " 원"
 
         # 매수 평균가
         avg_buy = int(float(json_data[0]["avg_buy_price"]))
         print(avg_buy)
-        avg_buy_text = str(avg_buy) + " 원"
+        self.avg_buy_text = str(avg_buy) + " 원"
 
         self.setObjectName("MainWindow")
         self.setFixedSize(1920, 1080)
@@ -119,13 +116,13 @@ class Ui_MyPage(QtWidgets.QDialog):
         cnt = 0
         for i in json_data:
             if(i["currency"] == "KRW") :
-                self.series.append("KRW", round((((float(i["balance"])/total))*100)))
+                self.series.append("KRW", round((((float(i["balance"])/self.total))*100)))
 
             else :
                 a = price_arr[cnt]
                 cnt += 1
-                self.series.append(i["currency"], round((((a/total)*100))))
-                print("percent: ", int((a/total)*100))
+                self.series.append(i["currency"], round((((a/self.total)*100))))
+                print("percent: ", int((a/self.total)*100))
 
         # self.series.append("BTC", 80)
         # self.series.append("ETH", 70)
@@ -302,33 +299,48 @@ class Ui_MyPage(QtWidgets.QDialog):
         ###################
         count = 0
         for i in json_data:
+            print('json_data',json_data)
             if (i["currency"] == "KRW"): pass
             else:
                 buy_data = int(float(i["balance"]) * float(i["avg_buy_price"]))
-                now_url = "https://api.upbit.com/v1/ticker?markets="
-                headers3 = {"Accept": "application/json"}
-                res = requests.request("GET", now_url + str(i["unit_currency"]) + "-" + str(i["currency"]), headers=headers3)
+                print(i["currency"])
+                res = requests.request("GET", "https://api.upbit.com/v1/ticker?markets=KRW-" + str(i["currency"]), headers={"Accept": "application/json"})
                 data = res.json()
-                print('xkcg')
-                print(i)
+                print(data)
+
                 now_price = int(float(data[0]["trade_price"]) * float(i["balance"]))
                 self.table_currentCoinList.setItem(count, 0, QTableWidgetItem(str(i["currency"])))  # 보유코인
-                self.table_currentCoinList.item(count,0).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-                self.table_currentCoinList.setItem(count, 1, QTableWidgetItem(str(now_price-buy_data)))  # 평가손익
+                self.table_currentCoinList.item(count, 0).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e1')
+                self.table_currentCoinList.setItem(count, 1, QTableWidgetItem(str(now_price - buy_data)))  # 평가손익
                 self.table_currentCoinList.item(count, 1).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-                self.table_currentCoinList.setItem(count, 2, QTableWidgetItem(str(round((int(data[0]["trade_price"])/int(i["avg_buy_price"])-1)*100, 2))+'%'))  # 수익률
+                print('e2')
+                # print(data[0]["trade_price"], int(i["avg_buy_price"]) - 1) 여기 문제
+                print(buy_data, now_price)
+                self.table_currentCoinList.setItem(count, 2, QTableWidgetItem(str((round((now_price / buy_data-1)*100, 2)))+ '%')) # 수익률
                 self.table_currentCoinList.item(count, 2).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e3')
+
                 self.table_currentCoinList.setItem(count, 3, QTableWidgetItem(str(i["balance"])))  # 보유수량
                 self.table_currentCoinList.item(count, 3).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e4')
+
                 self.table_currentCoinList.setItem(count, 4, QTableWidgetItem(str(now_price)))  # 평가금액
                 self.table_currentCoinList.item(count, 4).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e5')
+
                 self.table_currentCoinList.setItem(count, 5, QTableWidgetItem(str(i["avg_buy_price"])))  # 매수평균가
                 self.table_currentCoinList.item(count, 5).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e6')
+
                 self.table_currentCoinList.setItem(count, 6, QTableWidgetItem(str(int(data[0]["trade_price"]))))  # 현재가
                 self.table_currentCoinList.item(count, 6).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+                print('e7')
+
                 self.table_currentCoinList.setItem(count, 7, QTableWidgetItem(str(buy_data)))  # 매수금액
                 self.table_currentCoinList.item(count, 7).setTextAlignment(Qt.AlignCenter | Qt.AlignVCenter)
                 count += 1
+                print('end')
         
         # 주문가능금액 프레임
         self.frame_4 = QtWidgets.QFrame(self.frame_2)
@@ -708,39 +720,19 @@ class Ui_MyPage(QtWidgets.QDialog):
         item.setText(_translate("MainWindow", "매수금액"))
         self.label_currentCoinListTitle.setText(_translate("MainWindow", "보유현황"))
         self.label_totalMoneyTitle.setText(_translate("MainWindow", "총 평가금액"))
-        self.label_totalMoney.setText(_translate("MainWindow",total_text))
+        self.label_totalMoney.setText(_translate("MainWindow",self.total_text))
         self.label_availableMoneyTitle.setText(_translate("MainWindow", "주문가능금액"))
-        self.label_availableMoney.setText(_translate("MainWindow", money_text))
+        self.label_availableMoney.setText(_translate("MainWindow", self.money_text))
         self.button_charging.setText(_translate("MainWindow", "충전"))
         self.button_sending.setText(_translate("MainWindow", "출금"))
         self.button_bankingHistory.setText(_translate("MainWindow", "입출금내역"))
         self.label_currentCoinTitle.setText(_translate("MainWindow", "코인"))
-        self.label_currentCoin.setText(_translate("MainWindow", coin_total_text))
+        self.label_currentCoin.setText(_translate("MainWindow", self.coin_total_text))
         self.pushButton.setText(_translate("MainWindow", "보유 코인"))
         self.pushButton_2.setText(_translate("MainWindow", "거래내역"))
 
     def showModal(self):
         return super().exec_()
-
-# def set_id(temp_id):
-#     global user_id
-#     user_id = origin_module.user_id
-#     print("new_id in myPage", user_id)
-#     sql = "select API_KEY from USER_DB where user_id = '{}'".format(user_id)
-#     print("sql : " + sql)
-#     Cursor.execute(sql)
-#     global access_key
-#     result = Cursor.fetchall()
-#     access_key = result[0][0]
-#     print("access_key : ", access_key)
-#
-#     sql = "select SECRET_KEY from USER_DB where user_id = '{}'".format(user_id)
-#     print("sql : " + sql)
-#     Cursor.execute(sql)
-#     global secret_key
-#     result = Cursor.fetchall()
-#     secret_key = result[0][0]
-#     print("secret_key : ", secret_key)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)

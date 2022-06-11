@@ -362,24 +362,6 @@ class Ui_Setup(QtWidgets.QDialog):
             msgBox.exec_()
             self.close()
 
-
-        # else:
-        #     name = self.input_name.text()
-        #     email = self.input_email.text()
-        #     id = self.input_id.text()
-        #     pw = self.input_pw.text()
-        #     api_key = self.input_api_key.text()
-        #     secret_key = self.input_api_secret.text()
-        #     market = self.input_market.currentText()
-        #     sql = "insert into USER_DB values('{}','{}','{}','{}','{}','{}','{}','{}')".format(name, email, id, pw, market,
-        #                                                                                   api_key, secret_key, 1)
-        #     Cursor.execute(sql)
-        #     Connect.commit()
-        #     msgBox.setText("회원가입이 완료되었습니다.")
-        #     msgBox.exec_()
-        #     print("bye")
-        #     self.close()
-
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))

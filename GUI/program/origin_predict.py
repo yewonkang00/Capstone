@@ -1,13 +1,17 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+import joblib
+from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 import requests
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from PyQt5.QtCore import Qt, QTimer
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+#from matplotlib.backends.backend_qt5agg import FigureCanvas as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
 import sys
 import pandas as pd
 import origin_module
+import plotly.express as px
 import numpy as np
 
 # 코인 실시간 데이터 불러오기
@@ -21,10 +25,23 @@ current_coin = "KRW-BTC"
 access_key = 'aaa'
 secret_key = 'aaa'
 
+xgb_test_data = pd.read_csv('./xgb_test_data.csv')
+loaded_model = joblib.load('./xgb_model2.pkl')
+print('x2')
+result = loaded_model.predict(xgb_test_data)
+print('xxx')
+print(xgb_test_data)
+print('xxx')
+resultdf = pd.DataFrame(result)
+resultdf.columns = ['predict']
+resultdf['predict'] = resultdf['predict'] / 10000
+resultdf['Date'] = pd.date_range("2022-05-29", "2022-06-28", freq="D")
+
 class Ui_Predict(QtWidgets.QDialog):
 
     def __init__(self):
         super().__init__()
+        self.chart_check = 1
         self.setupUI()
 
         timer = QTimer(self)
@@ -41,6 +58,7 @@ class Ui_Predict(QtWidgets.QDialog):
         for i in response:
             if "KRW" in i["market"]:
                 self.coin_list.append(i['market'])
+
     def lineeditTextFunction(self):
         tx = self.edit_search.text()
         tx = tx.upper()
@@ -74,6 +92,7 @@ class Ui_Predict(QtWidgets.QDialog):
             self.tableWidget.setItem(k, 3, QTableWidgetItem(str("{:g}".format((new_df['거래대금'][k])) + " 백만")))
 
         self.tableWidget.setRowCount(len(new_df))
+
     # 코인 실시간 데이터 반영
     def setData(self):
         chart_res = requests.request("GET", chart_url + self.market_text, headers=headers)
@@ -99,10 +118,27 @@ class Ui_Predict(QtWidgets.QDialog):
 
         self.tableWidget.setRowCount(len(new_df))
 
+    def doGraph1(self):
+        x = resultdf['Date']
+        y = resultdf['predict']
+        # y2 = np.cos(x)
+
+        self.fig.clear()
+        ax = self.fig.add_subplot(111)
+        ax.plot(x, y, label="predict close")
+        #ax.plot(x, y2, label="cos(x)", linestyle="--")
+
+        ax.set_xlabel("Date")
+        ax.set_ylabel("10 Thousand")
+        #plt.rc('font', family='Malgun Gothic')
+        ax.set_title("Predict next 30 days")
+        ax.legend()
+
+        self.canvas.draw()
+
     def setupUI(self):
         # 전체 KRW 코인
-        global market_text
-        market_text = ''
+        self.market_text = ''
         first = 0
         for i in response.json():
             if "KRW" in i["market"]:
@@ -114,10 +150,8 @@ class Ui_Predict(QtWidgets.QDialog):
         # print(market_text)
 
         global access_key, secret_key
-        access_key = 'Da6POBtP1FxfCvphLxXicwkv2hvSKXkodJ5oaLxe'
-        secret_key = 'vKWdRCJWGU7yycHPEmAj8tz5PvPtqvBz3HmfvSth'
-        # access_key = origin_module.access_key
-        # secret_key = origin_module.secret_key
+        access_key = origin_module.access_key
+        secret_key = origin_module.secret_key
 
         self.setObjectName("MainWindow")
         self.resize(1920, 1080)
@@ -127,20 +161,63 @@ class Ui_Predict(QtWidgets.QDialog):
         self.centralwidget.setStyleSheet("background-color: rgb(255,255,255)")
 
         # 왼쪽 프레임
-        self.frame = QtWidgets.QMainWindow(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(0,112,1546,1435))
-        #self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        #self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0,112,1534,1435))
+        self.frame.setStyleSheet("background-color: rgb(50, 90, 160)")  # 배경색 설정
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.frame.setStyleSheet("background-color:none;")
 
-        # 호가창
-        # self.chart = QLabel(self)
-        # self.chart.setGeometry(QtCore.QRect(443, 150, 1700, 1100))
+        # 예측 창
+        self.frame_chart = QtWidgets.QFrame(self.centralwidget)
+        self.frame_chart.setGeometry(QtCore.QRect(250, 70, 1320, 900))
+        self.fig = plt.Figure()
+        self.canvas = FigureCanvas(self.fig)
+
+        layout = QVBoxLayout(self.frame_chart)
+        layout.addWidget(self.canvas)
+
+        self.layout = layout
+        self.layout.setGeometry(QtCore.QRect(350, 0, 800, 400))
+        self.doGraph1()
+
+        # self.chart = QLabel(self.frame)
+        # self.chart.setGeometry(QtCore.QRect(350, 50, 1320, 800))
         # self.pixmap = QPixmap('resources/predict.jpg')
         # self.chart.setPixmap(self.pixmap)
         # self.chart.setContentsMargins(10,10,10,10)
         # self.chart.resize(self.pixmap.width(), self.pixmap.height())
+
+
+
+        # self.webEngineView = QtWebEngineWidgets.QWebEngineView(self.frame)
+        # self.webEngineView.setGeometry(QtCore.QRect(175, 0, 1320, 800))
+
+        # df = px.data.tips()
+        # fig = px.box(df, x="day", y="total_bill", color="smoker")
+        # fig.update_traces(quartilemethod="inclusive")  # or "inclusive", or "linear" by default
+        # self.browser.setHtml(fig.to_html(include_plotlyjs='cdn'))
+
+
+        # xgb_test_data = pd.read_csv('./xgb_test_data.csv')
+        # loaded_model = joblib.load('./xgb_model2.pkl')
+        # result = loaded_model.predict(xgb_test_data)
+        # resultdf = pd.DataFrame(result)
+        # resultdf.columns = ['predict']
+        # resultdf['Date'] = pd.date_range("2022-05-29", "2022-06-28", freq="D")
+        # result = loaded_model.predict(xgb_test_data)
+        #
+        #
+        # plt = px.line(resultdf, x=resultdf.Date, y=[resultdf['predict']],
+        #               labels={'value': 'predict', 'index': 'Date'})
+        # plt.update_layout(title_text='Predict next 10 days',
+        #                   plot_bgcolor='white', font_size=15, font_color='black', legend_title_text='Close Price')
+        # # fig.for_each_trace(lambda t:  t.update(name = next(names)))
+        # plt.update_xaxes(showgrid=False)
+        # plt.update_yaxes(showgrid=False)
+        # self.webEngineView.setHtml(plt.to_html(include_plotlyjs='cdn'))
+
 
         # 오른쪽 프레임
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
